@@ -1,0 +1,18 @@
+threads: 16
+rnachemistry: leader_v1
+oligochip: LD
+nobam: true
+dev: true
+velo: true
+species: mouse
+mapparams: ""
+cbwhitelist: ""
+sbwhitelist: ""
+
+
+# 输入文件配置
+references:
+  human: "/fastdata03/biodata/reference/human/refdata-gex-GRCh38-2024-A/cellsketcher"
+  mouse: "/fastdata03/biodata/reference/mouse/refdata-gex-GRCm39-2024-A/cellsketcher"
+  handm: "/fastdata03/biodata/reference/handm/refdata-gex-GRCh38_and_GRCm39-2024-A/cellsketcher"
+

@@ -1,0 +1,84 @@
+Config file /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/config/config.yaml is extended by additional config specified via the command line.
+2025-06-03 15:52:26.990 | INFO     | snakemake.workflow:<module>:29 - snakemake 配置如下：
+ {
+  "samples": {
+    "0530-0523-N24-03-C": {
+      "RNA": "/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_1.fq.gz;/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_2.fq.gz",
+      "Oligo": "/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_1.fq.gz;/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_2.fq.gz",
+      "coord": "/data03/lead/userdata/upstreamwork/spatialRNA_analysis/Puckfiles/10mm/N24-results/puck3/puck3_barcodes_src.csv",
+      "species": "mouse"
+    }
+  },
+  "outdir": "/data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples",
+  "chemistry": "leader_v1",
+  "threads": 16,
+  "library": "leader_v1",
+  "nobam": true,
+  "dev": true,
+  "species": "mouse",
+  "mapparams": "",
+  "cbwhitelist": "",
+  "sbwhitelist": "",
+  "references": {
+    "human": "/fastdata03/biodata/reference/human/refdata-gex-GRCh38-2024-A/cellsketcher",
+    "mouse": "/fastdata03/biodata/reference/mouse/refdata-gex-GRCm39-2024-A/cellsketcher",
+    "handm": "/fastdata03/biodata/reference/handm/refdata-gex-GRCh38_and_GRCm39-2024-A/cellsketcher"
+  }
+}
+Building DAG of jobs...
+Job stats:
+job         count
+--------  -------
+all             1
+counts          1
+fastq_qc        1
+total           3
+
+
+[Tue Jun  3 15:52:27 2025]
+rule counts:
+    input: /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_1.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_2.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_1.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_2.fq.gz
+    output: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.analysis.done
+    log: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/log/0530-0523-N24-03-C.analysis.log
+    jobid: 1
+    reason: Missing output files: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.analysis.done
+    wildcards: sample=0530-0523-N24-03-C
+    threads: 4
+    resources: tmpdir=<TBD>, mem_gib=60
+
+
+[Tue Jun  3 15:52:27 2025]
+rule fastq_qc:
+    input: /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_1.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_2.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_1.fq.gz, /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_2.fq.gz
+    output: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.fastqc.done
+    log: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/log/0530-0523-N24-03-C.fastq_qc.log
+    jobid: 2
+    reason: Missing output files: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.fastqc.done
+    wildcards: sample=0530-0523-N24-03-C
+    threads: 3
+    resources: tmpdir=<TBD>, mem_gib=3
+
+
+[Tue Jun  3 15:52:27 2025]
+rule all:
+    input: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.analysis.done, /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.fastqc.done
+    jobid: 0
+    reason: Input files updated by another job: /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.analysis.done, /data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples/0530-0523-N24-03-C/.fastqc.done
+    resources: tmpdir=<TBD>
+
+Job stats:
+job         count
+--------  -------
+all             1
+counts          1
+fastq_qc        1
+total           3
+
+Reasons:
+    (check individual jobs above for details)
+    input files updated by another job:
+        all
+    output files have to be generated:
+        counts, fastq_qc
+
+This was a dry-run (flag -n). The order of jobs does not reflect the order of execution.

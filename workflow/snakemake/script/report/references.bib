@@ -1,0 +1,826 @@
+
+@article{harmony,
+	title = {Fast, sensitive and accurate integration of single-cell data with {Harmony}},
+	volume = {16},
+	issn = {1548-7105},
+	url = {https://doi.org/10.1038/s41592-019-0619-0},
+	doi = {10.1038/s41592-019-0619-0},
+	abstract = {The emerging diversity of single-cell RNA-seq datasets allows for the full transcriptional characterization of cell types across a wide variety of biological and clinical conditions. However, it is challenging to analyze them together, particularly when datasets are assayed with different technologies, because biological and technical differences are interspersed. We present Harmony (https://github.com/immunogenomics/harmony), an algorithm that projects cells into a shared embedding in which cells group by cell type rather than dataset-specific conditions. Harmony simultaneously accounts for multiple experimental and biological factors. In six analyses, we demonstrate the superior performance of Harmony to previously published algorithms while requiring fewer computational resources. Harmony enables the integration of {\textasciitilde}106 cells on a personal computer. We apply Harmony to peripheral blood mononuclear cells from datasets with large experimental differences, five studies of pancreatic islet cells, mouse embryogenesis datasets and the integration of scRNA-seq with spatial transcriptomics data.},
+	number = {12},
+	journal = {Nature Methods},
+	author = {Korsunsky, Ilya and Millard, Nghia and Fan, Jean and Slowikowski, Kamil and Zhang, Fan and Wei, Kevin and Baglaenko, Yuriy and Brenner, Michael and Loh, Po-ru and Raychaudhuri, Soumya},
+	month = dec,
+	year = {2019},
+	pages = {1289--1296},
+}
+
+@article{tsne,
+	title = {Accelerating t-{SNE} using {Tree}-{Based} {Algorithms}},
+	volume = {15},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v15/vandermaaten14a.html},
+	abstract = {The paper investigates the acceleration of t-SNE--an embedding technique that is commonly used for the visualization of high- dimensional data in scatter plots--using two tree-based algorithms. In particular, the paper develops variants of the Barnes-Hut algorithm and of the dual-tree algorithm that approximate the gradient used for learning t-SNE embeddings in 
+O(NlogN)
+O(Nlog⁡N)
+. Our experiments show that the resulting algorithms substantially accelerate t-SNE, and that they make it possible to learn embeddings of data sets with millions of objects. Somewhat counterintuitively, the Barnes-Hut variant of t-SNE appears to outperform the dual-tree variant.},
+	number = {93},
+	urldate = {2021-08-17},
+	journal = {Journal of Machine Learning Research},
+	author = {Maaten, Laurens van der},
+	year = {2014},
+	pages = {3221--3245},
+}
+@article{umap,
+	title = {Dimensionality reduction for visualizing single-cell data using {UMAP}},
+	volume = {37},
+	copyright = {2018 Nature Publishing Group, a division of Macmillan Publishers Limited. All Rights Reserved.},
+	issn = {1546-1696},
+	url = {https://www.nature.com/articles/nbt.4314},
+	doi = {10.1038/nbt.4314},
+	abstract = {A benchmarking analysis on single-cell RNA-seq and mass cytometry data reveals the best-performing technique for dimensionality reduction.},
+	language = {en},
+	number = {1},
+	urldate = {2021-08-17},
+	journal = {Nature Biotechnology},
+	author = {Becht, Etienne and McInnes, Leland and Healy, John and Dutertre, Charles-Antoine and Kwok, Immanuel W. H. and Ng, Lai Guan and Ginhoux, Florent and Newell, Evan W.},
+	month = jan,
+	year = {2019},
+	note = {Bandiera\_abtest: a
+Cg\_type: Nature Research Journals
+Number: 1
+Primary\_atype: Research
+Publisher: Nature Publishing Group
+Subject\_term: Computational biology and bioinformatics;Data mining;Immunology
+Subject\_term\_id: computational-biology-and-bioinformatics;data-mining;immunology},
+	pages = {38--44},
+	file = {Snapshot:files/28/nbt.html:text/html;已提交版本:files/29/Becht 等。 - 2019 - Dimensionality reduction for visualizing single-ce.pdf:application/pdf},
+}
+@article{fastp,
+   author = {Chen, S. and Zhou, Y. and Chen, Y. and Gu, J.},
+   title = {fastp: an ultra-fast all-in-one FASTQ preprocessor},
+   journal = {Bioinformatics},
+   volume = {34},
+   number = {17},
+   pages = {i884-i890},
+   ISSN = {1367-4811 (Electronic) 1367-4803 (Linking)},
+   DOI = {10.1093/bioinformatics/bty560},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/30423086},
+   year = {2018},
+   type = {Journal Article}
+}
+
+
+@article{seurat_integrate,
+   author = {Butler, A. and  Hoffman, P. and Smibert, P. et al},
+   title = {Integrating single-cell transcriptomic data across different conditions, technologies, and species.},
+   journal = {Nature biotechnology},
+   volume = {36},
+   number = {5},
+   pages = {411-420},
+   ISSN = {-},
+   DOI = {10.1038/nbt.4096},
+   url = {-},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{seurat4,
+  title={Integrated analysis of multimodal single-cell data},
+  author={Hao, Yuhan and Hao, Stephanie and Andersen-Nissen, Erica and Mauck III, William M and Zheng, Shiwei and Butler, Andrew and Lee, Maddie J and Wilk, Aaron J and Darby, Charlotte and Zager, Michael and others},
+  journal={Cell},
+  volume={184},
+  number={13},
+  url={https://www.sciencedirect.com/science/article/pii/S0092867421005833},
+  pages={3573--3587},
+  year={2021},
+  publisher={Elsevier}
+}
+
+@article{scmap,
+  title={scmap-A tool for unsupervised projection of single cell RNA-seq data},
+  author={Kiselev, Vladimir Yu and Yiu, Andrew and Hemberg, Martin},
+  journal={BioRxiv},
+  pages={150292},
+  url={https://www.biorxiv.org/content/10.1101/150292v3.abstract},
+  year={2017},
+  publisher={Cold Spring Harbor Laboratory}
+}
+
+@article{scina,
+  title={SCINA: a semi-supervised subtyping algorithm of single cells and bulk samples},
+  author={Zhang, Ze and Luo, Danni and Zhong, Xue and Choi, Jin Huk and Ma, Yuanqing and Wang, Stacy and Mahrt, Elena and Guo, Wei and Stawiski, Eric W and Modrusan, Zora and others},
+  journal={Genes},
+  volume={10},
+  number={7},
+  url={https://www.mdpi.com/2073-4425/10/7/531},
+  pages={531},
+  year={2019},
+  publisher={MDPI}
+}
+
+@article{markercount,
+  title={MarkerCount: A stable, count-based cell type identifier for single-cell RNA-seq experiments},
+  author={Kim, HanByeol and Lee, Joongho and Kang, Keunsoo and Yoon, Seokhyun},
+  journal={Computational and Structural Biotechnology Journal},
+  volume={20},
+  url={https://www.sciencedirect.com/science/article/pii/S2001037022002239},
+  pages={3120--3132},
+  year={2022},
+  publisher={Elsevier}
+}
+
+@article{sctyper,
+  title={scTyper: a comprehensive pipeline for the cell typing analysis of single-cell RNA-seq data},
+  author={Choi, Ji-Hye and In Kim, Hye and Woo, Hyun Goo},
+  journal={BMC bioinformatics},
+  volume={21},
+  number={1},
+  url={https://link.springer.com/article/10.1186/s12859-020-03700-5},
+  pages={1--8},
+  year={2020},
+  publisher={Springer}
+}
+
+@article{DO,
+  title={Human Disease Ontology 2018 update: classification, content and workflow expansion},
+  author={Schriml, Lynn M and Mitraka, Elvira and Munro, James and Tauber, Becky and Schor, Mike and Nickle, Lance and Felix, Victor and Jeng, Linda and Bearer, Cynthia and Lichenstein, Richard and others},
+  journal={Nucleic acids research},
+  volume={47},
+  number={D1},
+  url = {https://academic.oup.com/nar/article/47/D1/D955/5165342},
+  pages={D955--D962},
+  year={2019},
+  publisher={Oxford University Press}
+}
+
+@article{disgenet,
+  title={The DisGeNET knowledge platform for disease genomics: 2019 update},
+  author={Pi{\~n}ero, Janet and Ram{\'\i}rez-Anguita, Juan Manuel and Sa{\"u}ch-Pitarch, Josep and Ronzano, Francesco and Centeno, Emilio and Sanz, Ferran and Furlong, Laura I},
+  journal={Nucleic acids research},
+  volume={48},
+  number={D1},
+  url = {https://academic.oup.com/nar/article/48/D1/D845/5611674},
+  pages={D845--D855},
+  year={2020},
+  publisher={Oxford University Press}
+}
+
+
+@article{doubletfinder,
+   author = {McGinnis, CS. and Murrow, LM. and Gartner, ZJ.},
+   title = { DoubletFinder: doublet detection in single-cell RNA sequencing data using artificial nearest neighbors. },
+   journal = {Cell Syst. },
+   volume = {8},
+   number = {4},
+   pages = {329-337},
+   ISSN = {-},
+   DOI = {10.1016/j.cels.2019.03.003},
+   url = {-},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{scRNA_3,
+   author = {Tim, S. and Andrew, Butler. and Paul, Hoffman. et al.},
+   title = {Comprehensive integration of single cell data. },
+   journal = {Cell},
+   volume = {177},
+   number = {7},
+   pages = {1888–1902},
+   ISSN = {-},
+   DOI = {10.1016/j.cell.2019.05.031},
+   url = {-},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{scRNA_4,
+   author = {Maaten, L and van, der. and Hinton, G},
+   title = {Visualizing data using t-SNE. },
+   journal = {Journal of Machine Learning Research},
+   volume = {9},
+   number = {86},
+   pages = {2579−2605},
+   ISSN = {-},
+   DOI = {-},
+   url = {-},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{scRNA_5,
+   author = {Etienne, Becht and Leland, McInnes. and John, Healy. and Charles-Antoine, Dutertre. et al.},
+   title = {Dimensionality reduction for visualizing single-cell data using UMAP. },
+   journal = {Nat. Biotechnol},
+   volume = {37},
+   number = {1},
+   pages = {38–44},
+   ISSN = {-},
+   DOI = {10.1038/nbt.4314},
+   url = {-},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{clusterProfiler,
+   author = {Guangchuang. Yu and Li-Gen. Wang and Yanyan. Han and Qing-Yu. He},
+   title = {clusterProfiler: an R package for comparing biological themes among gene clusters},
+   journal = {Omi. AJ. Integr. Biol},
+   volume = {16},
+   number = {5},
+   pages = {284–287},
+   ISSN = {-},
+   DOI = {10.1089/omi.2011.0118},
+   url = {-},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{GO,
+   author = {Michael, Ashburner. and Catherine A. Ball and Judith A. Blake and David Botstein. et al.},
+   title = {Gene Ontology: tool for the unification of biology.},
+   journal = {Nature Genetics},
+   volume = {25},
+   number = {1},
+   pages = {25-29},
+   ISSN = {-},
+   DOI = {10.1038/75556},
+   url = {-},
+   year = {2000},
+   type = {Journal Article}
+}
+
+@article{DO,
+   author = {Janet Piñero and Núria Queralt-Rosinach and Àlex Bravo. et al.},
+   title = {A discovery platform for the dynamical exploration of human diseases and their genes},
+   journal = {Database},
+   volume = {2015},
+   number = {1},
+   pages = {-},
+   ISSN = {-},
+   DOI = {10.1093/database/bav028},
+   url = {-},
+   year = {2015},
+   type = {Journal Article}
+}
+
+@article{reactome,
+   author = {Guangchuang Yu and Qing-Yu He},
+   title = {An r/bioconductor package for reactome pathway analysis and visualization. },
+   journal = {Mol. BioSyst.},
+   volume = {12},
+   number = {2},
+   pages = {477-479},
+   ISSN = {-},
+   DOI = {10.1039/c5mb00663e},
+   url = {-},
+   year = {2016},
+   type = {Journal Article}
+}
+
+@article{singleR,
+   author = {Dvir Aran and Agnieszka P and Looney and Leqian Liu and Esther Wu and Valerie Fong. et al.},
+   title = {Reference-based analysis of lung single-cell sequencing reveals a transitional profibrotic macrophage.},
+   journal = {Nat Immunol.},
+   volume = {20},
+   number = {2},
+   pages = {163–172},
+   ISSN = {-},
+   DOI = {10.1038/s41590-018-0276-y},
+   url = {-},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{monocle,
+   author = {Trapnell C and Cacchiarelli D and Grimsby J and Pokharel P and Li S and Morse M and Lennon NJ and Livak KJ and Mikkelsen TS and Rinn JL.},
+   title = {The dynamics and regulators of cell fate decisions are revealed by pseudotemporal ordering of single cells.},
+   journal = { Nat Biotechnol},
+   volume = {32},
+   number = {4},
+   pages = {381-386},
+   ISSN = {-},
+   DOI = {10.1038/nbt.2859},
+   url = {-},
+   year = {2014},
+   type = {Journal Article}
+}
+
+@article{scRNA_12,
+   author = {Vento-Tormo R and Efremova M, et al.},
+   title = { Single-cell reconstruction of the early maternal-fetal interface in humans.},
+   journal = {Nature},
+   volume = {563},
+   number = {7731},
+   pages = {347-353},
+   ISSN = {-},
+   DOI = {10.1038/s41586-018-0698-6},
+   url = {-},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{CellPhoneDB,
+   author = {Efremova M and Vento-Tormo M and Teichmann S and Vento-Tormo R.},
+   title = {CellPhoneDB: Inferring cell-cell communication from combined expression of multi-subunit receptor-ligand complexes.},
+   journal = {Nat Protoc.},
+   volume = {15},
+   number = {4},
+   pages = {1484-1506},
+   ISSN = {-},
+   DOI = {10.1038/s41596-020-0292-x},
+   url = {-},
+   year = {2020},
+   type = {Journal Article}
+}
+
+
+@article{STAR,
+   author = {Dobin, A. and Davis, C. A. and Schlesinger, F. and Drenkow, J. and Zaleski, C. and Jha, S. and Batut, P. and Chaisson, M. and Gingeras, T. R.},
+   title = {STAR: ultrafast universal RNA-seq aligner},
+   journal = {Bioinformatics},
+   volume = {29},
+   number = {1},
+   pages = {15-21},
+   ISSN = {1367-4811 (Electronic)
+1367-4803 (Linking)},
+   DOI = {10.1093/bioinformatics/bts635},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/23104886},
+   year = {2013},
+   type = {Journal Article}
+}
+
+@article{RN4,
+   author = {DeLuca, D. S. and Levin, J. Z. and Sivachenko, A. and Fennell, T. and Nazaire, M. D. and Williams, C. and Reich, M. and Winckler, W. and Getz, G.},
+   title = {RNA-SeQC: RNA-seq metrics for quality control and process optimization},
+   journal = {Bioinformatics},
+   volume = {28},
+   number = {11},
+   pages = {1530-2},
+   ISSN = {1367-4811 (Electronic)
+1367-4803 (Linking)},
+   DOI = {10.1093/bioinformatics/bts196},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/22539670},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{RN5,
+   author = {Wang, L. and Wang, S. and Li, W.},
+   title = {RSeQC: quality control of RNA-seq experiments},
+   journal = {Bioinformatics},
+   volume = {28},
+   number = {16},
+   pages = {2184-5},
+   ISSN = {1367-4811 (Electronic)
+1367-4803 (Linking)},
+   DOI = {10.1093/bioinformatics/bts356},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/22743226},
+   year = {2012},
+   type = {Journal Article}
+}
+
+@article{RN6,
+   author = {Pertea, M. and Pertea, G. M. and Antonescu, C. M. and Chang, T. C. and Mendell, J. T. and Salzberg, S. L.},
+   title = {StringTie enables improved reconstruction of a transcriptome from RNA-seq reads},
+   journal = {Nat Biotechnol},
+   volume = {33},
+   number = {3},
+   pages = {290-5},
+   ISSN = {1546-1696 (Electronic)
+1087-0156 (Linking)},
+   DOI = {10.1038/nbt.3122},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/25690850},
+   year = {2015},
+   type = {Journal Article}
+}
+
+@article{RN7,
+   author = {Love, M. I. and Huber, W. and Anders, S.},
+   title = {Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2},
+   journal = {Genome Biol},
+   volume = {15},
+   number = {12},
+   pages = {550},
+   ISSN = {1474-760X (Electronic)
+1474-7596 (Linking)},
+   DOI = {10.1186/s13059-014-0550-8},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/25516281},
+   year = {2014},
+   type = {Journal Article}
+}
+@article{RN8,
+   author = {Ashburner, M. and Ball, C. A. and Blake, J. A. and Botstein, D. and Butler, H. and Cherry, J. M. and Davis, A. P. and Dolinski, K. and Dwight, S. S. and Eppig, J. T. and Harris, M. A. and Hill, D. P. and Issel-Tarver, L. and Kasarskis, A. and Lewis, S. and Matese, J. C. and Richardson, J. E. and Ringwald, M. and Rubin, G. M. and Sherlock, G.},
+   title = {Gene ontology: tool for the unification of biology. The Gene Ontology Consortium},
+   journal = {Nat Genet},
+   volume = {25},
+   number = {1},
+   pages = {25-9},
+   ISSN = {1061-4036 (Print)
+1061-4036 (Linking)},
+   DOI = {10.1038/75556},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/10802651},
+   year = {2000},
+   type = {Journal Article}
+}
+
+@article{RN9,
+   author = {Schriml, L. M. and Mitraka, E. and Munro, J. and Tauber, B. and Schor, M. and Nickle, L. and Felix, V. and Jeng, L. and Bearer, C. and Lichenstein, R. and Bisordi, K. and Campion, N. and Hyman, B. and Kurland, D. and Oates, C. P. and Kibbey, S. and Sreekumar, P. and Le, C. and Giglio, M. and Greene, C.},
+   title = {Human Disease Ontology 2018 update: classification, content and workflow expansion},
+   journal = {Nucleic Acids Res},
+   volume = {47},
+   number = {D1},
+   pages = {D955-D962},
+   ISSN = {1362-4962 (Electronic)
+0305-1048 (Linking)},
+   DOI = {10.1093/nar/gky1032},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/30407550},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{KEGG,
+   author = {Ogata, H. and Goto, S. and Sato, K. and Fujibuchi, W. and Bono, H. and Kanehisa, M.},
+   title = {KEGG: Kyoto Encyclopedia of Genes and Genomes},
+   journal = {Nucleic Acids Res},
+   volume = {27},
+   number = {1},
+   pages = {29-34},
+   ISSN = {0305-1048 (Print)
+0305-1048 (Linking)},
+   DOI = {10.1093/nar/27.1.29},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/9847135},
+   year = {1999},
+   type = {Journal Article}
+}
+
+@article{RN11,
+   author = {Fabregat, A. and Jupe, S. and Matthews, L. and Sidiropoulos, K. and Gillespie, M. and Garapati, P. and Haw, R. and Jassal, B. and Korninger, F. and May, B. and Milacic, M. and Roca, C. D. and Rothfels, K. and Sevilla, C. and Shamovsky, V. and Shorser, S. and Varusai, T. and Viteri, G. and Weiser, J. and Wu, G. and Stein, L. and Hermjakob, H. and D'Eustachio, P.},
+   title = {The Reactome Pathway Knowledgebase},
+   journal = {Nucleic Acids Res},
+   volume = {46},
+   number = {D1},
+   pages = {D649-D655},
+   ISSN = {1362-4962 (Electronic)
+0305-1048 (Linking)},
+   DOI = {10.1093/nar/gkx1132},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/29145629},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{GSEA,
+   author = {Subramanian, A. and Tamayo, P. and Mootha, V. K. and Mukherjee, S. and Ebert, B. L. and Gillette, M. A. and Paulovich, A. and Pomeroy, S. L. and Golub, T. R. and Lander, E. S. and Mesirov, J. P.},
+   title = {Gene set enrichment analysis: a knowledge-based approach for interpreting genome-wide expression profiles},
+   journal = {Proc Natl Acad Sci U S A},
+   volume = {102},
+   number = {43},
+   pages = {15545-50},
+   ISSN = {0027-8424 (Print)
+0027-8424 (Linking)},
+   DOI = {10.1073/pnas.0506580102},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/16199517},
+   year = {2005},
+   type = {Journal Article}
+}
+
+@article{RN12,
+   author = {Mootha, V. K. and Lindgren, C. M. and Eriksson, K. F. and Subramanian, A. and Sihag, S. and Lehar, J. and Puigserver, P. and Carlsson, E. and Ridderstrale, M. and Laurila, E. and Houstis, N. and Daly, M. J. and Patterson, N. and Mesirov, J. P. and Golub, T. R. and Tamayo, P. and Spiegelman, B. and Lander, E. S. and Hirschhorn, J. N. and Altshuler, D. and Groop, L. C.},
+   title = {PGC-1alpha-responsive genes involved in oxidative phosphorylation are coordinately downregulated in human diabetes},
+   journal = {Nat Genet},
+   volume = {34},
+   number = {3},
+   pages = {267-73},
+   ISSN = {1061-4036 (Print)
+1061-4036 (Linking)},
+   DOI = {10.1038/ng1180},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/12808457},
+   year = {2003},
+   type = {Journal Article}
+}
+
+@article{RN14,
+   author = {Shen, S. and Park, J. W. and Lu, Z. X. and Lin, L. and Henry, M. D. and Wu, Y. N. and Zhou, Q. and Xing, Y.},
+   title = {rMATS: robust and flexible detection of differential alternative splicing from replicate RNA-Seq data},
+   journal = {Proc Natl Acad Sci U S A},
+   volume = {111},
+   number = {51},
+   pages = {E5593-601},
+   ISSN = {1091-6490 (Electronic)
+0027-8424 (Linking)},
+   DOI = {10.1073/pnas.1419161111},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/25480548},
+   year = {2014},
+   type = {Journal Article}
+}
+
+@article{RN15,
+   author = {Sturm, G. and Finotello, F. and Petitprez, F. and Zhang, J. D. and Baumbach, J. and Fridman, W. H. and List, M. and Aneichyk, T.},
+   title = {Comprehensive evaluation of transcriptome-based cell-type quantification methods for immuno-oncology},
+   journal = {Bioinformatics},
+   volume = {35},
+   number = {14},
+   pages = {i436-i445},
+   ISSN = {1367-4811 (Electronic)
+1367-4803 (Linking)},
+   DOI = {10.1093/bioinformatics/btz363},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/31510660},
+   year = {2019},
+   type = {Journal Article}
+}
+
+@article{RN16,
+   author = {Zhang, B. and Horvath, S.},
+   title = {A general framework for weighted gene co-expression network analysis},
+   journal = {Stat Appl Genet Mol Biol},
+   volume = {4},
+   pages = {Article17},
+   ISSN = {1544-6115 (Electronic)
+1544-6115 (Linking)},
+   DOI = {10.2202/1544-6115.1128},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/16646834},
+   year = {2005},
+   type = {Journal Article}
+}
+
+@article{kovaka2019transcriptome,
+  title={Transcriptome assembly from long-read RNA-seq alignments with StringTie2},
+  author={Kovaka, Sam and Zimin, Aleksey V and Pertea, Geo M and Razaghi, Roham and Salzberg, Steven L and Pertea, Mihaela},
+  journal={Genome Biology},
+  volume={20},
+  number={1},
+  pages={1--13},
+  year={2019},
+  publisher={BioMed Central}
+}
+
+@article{mckenna2010genome,
+  title={The Genome Analysis Toolkit: a MapReduce framework for analyzing next-generation DNA sequencing data},
+  author={McKenna, Aaron and Hanna, Matthew and Banks, Eric and Sivachenko, Andrey and Cibulskis, Kristian and Kernytsky, Andrew and Garimella, Kiran and Altshuler, David and Gabriel, Stacey and Daly, Mark and others},
+  journal={Genome research},
+  volume={20},
+  number={9},
+  pages={1297--1303},
+  year={2010},
+  publisher={Cold Spring Harbor Lab}
+}
+
+@article{mclaren2016ensembl,
+  title={The ensembl variant effect predictor},
+  author={McLaren, William and Gil, Laurent and Hunt, Sarah E and Riat, Harpreet Singh and Ritchie, Graham RS and Thormann, Anja and Flicek, Paul and Cunningham, Fiona},
+  journal={Genome biology},
+  volume={17},
+  number={1},
+  pages={122},
+  year={2016},
+  publisher={BioMed Central}
+}
+
+@article{SCENIC,
+	title = {A scalable {SCENIC} workflow for single-cell gene regulatory network analysis},
+	volume = {15},
+	issn = {1750-2799},
+	url = {https://doi.org/10.1038/s41596-020-0336-2},
+	doi = {10.1038/s41596-020-0336-2},
+	abstract = {This protocol explains how to perform a fast SCENIC analysis alongside standard best practices steps on single-cell RNA-sequencing data using software containers and Nextflow pipelines. SCENIC reconstructs regulons (i.e., transcription factors and their target genes) assesses the activity of these discovered regulons in individual cells and uses these cellular activity patterns to find meaningful clusters of cells. Here we present an improved version of SCENIC with several advances. SCENIC has been refactored and reimplemented in Python (pySCENIC), resulting in a tenfold increase in speed, and has been packaged into containers for ease of use. It is now also possible to use epigenomic track databases, as well as motifs, to refine regulons. In this protocol, we explain the different steps of SCENIC: the workflow starts from the count matrix depicting the gene abundances for all cells and consists of three stages. First, coexpression modules are inferred using a regression per-target approach (GRNBoost2). Next, the indirect targets are pruned from these modules using cis-regulatory motif discovery (cisTarget). Lastly, the activity of these regulons is quantified via an enrichment score for the regulon’s target genes (AUCell). Nonlinear projection methods can be used to display visual groupings of cells based on the cellular activity patterns of these regulons. The results can be exported as a loom file and visualized in the SCope web application. This protocol is illustrated on two use cases: a peripheral blood mononuclear cell data set and a panel of single-cell RNA-sequencing cancer experiments. For a data set of 10,000 genes and 50,000 cells, the pipeline runs in {\textless}2 h.},
+	number = {7},
+	journal = {Nature Protocols},
+	author = {Van de Sande, Bram and Flerin, Christopher and Davie, Kristofer and De Waegeneer, Maxime and Hulselmans, Gert and Aibar, Sara and Seurinck, Ruth and Saelens, Wouter and Cannoodt, Robrecht and Rouchon, Quentin and Verbeiren, Toni and De Maeyer, Dries and Reumers, Joke and Saeys, Yvan and Aerts, Stein},
+	year = {2020},
+	pages = {2247--2276},
+}
+@misc{noauthor_rna_nodate,
+    title = {{RNA} velocity of single cells {\textbar} {Nature}},
+    url = {https://www.nature.com/articles/s41586-018-0414-6#citeas},
+    urldate = {2022-02-16},
+}
+
+@article{velocity,
+    title = {Generalizing {RNA} velocity to transient cell states through dynamical modeling},
+    volume = {38},
+    issn = {1546-1696},
+    url = {https://doi.org/10.1038/s41587-020-0591-3},
+    doi = {10.1038/s41587-020-0591-3},
+    abstract = {RNA velocity has opened up new ways of studying cellular differentiation in single-cell RNA-sequencing data. It describes the rate of gene expression change for an individual gene at a given time point based on the ratio of its spliced and unspliced messenger RNA (mRNA). However, errors in velocity estimates arise if the central assumptions of a common splicing rate and the observation of the full splicing dynamics with steady-state mRNA levels are violated. Here we present scVelo, a method that overcomes these limitations by solving the full transcriptional dynamics of splicing kinetics using a likelihood-based dynamical model. This generalizes RNA velocity to systems with transient cell states, which are common in development and in response to perturbations. We apply scVelo to disentangling subpopulation kinetics in neurogenesis and pancreatic endocrinogenesis. We infer gene-specific rates of transcription, splicing and degradation, recover each cell’s position in the underlying differentiation processes and detect putative driver genes. scVelo will facilitate the study of lineage decisions and gene regulation.},
+    number = {12},
+    journal = {Nature Biotechnology},
+    author = {Bergen, Volker and Lange, Marius and Peidli, Stefan and Wolf, F. Alexander and Theis, Fabian J.},
+    year = {2020},
+    pages = {1408--1414},
+}
+
+
+@article{paga,
+    title = {{PAGA}: graph abstraction reconciles clustering with trajectory inference through a topology preserving map of single cells},
+    volume = {20},
+    issn = {1474-760X},
+    url = {https://doi.org/10.1186/s13059-019-1663-x},
+    doi = {10.1186/s13059-019-1663-x},
+    abstract = {Single-cell RNA-seq quantifies biological heterogeneity across both discrete cell types and continuous cell transitions. Partition-based graph abstraction (PAGA) provides an interpretable graph-like map of the arising data manifold, based on estimating connectivity of manifold partitions (https://github.com/theislab/paga). PAGA maps preserve the global topology of data, allow analyzing data at different resolutions, and result in much higher computational efficiency of the typical exploratory data analysis workflow. We demonstrate the method by inferring structure-rich cell maps with consistent topology across four hematopoietic datasets, adult planaria and the zebrafish embryo and benchmark computational performance on one million neurons.},
+    number = {1},
+    journal = {Genome Biology},
+    author = {Wolf, F. Alexander and Hamey, Fiona K. and Plass, Mireya and Solana, Jordi and Dahlin, Joakim S. and Göttgens, Berthold and Rajewsky, Nikolaus and Simon, Lukas and Theis, Fabian J.},
+    year = {2019},
+    pages = {59},
+}
+
+@article{Kim_2021,
+    doi = {10.21203/rs.3.rs-418249/v1},
+    url = {https://doi.org/10.21203%2Frs.3.rs-418249%2Fv1},
+    year = 2021,
+    month = {apr},
+    publisher = {Research Square Platform {LLC}},
+    author = {Hanbyeol Kim and Joongho Lee and Keunsoo Kang and Seokhyun Yoon},
+    title = {{MarkerCount}: A stable, count-based cell type identifier for single cell {RNA}-Seq experiments}
+}
+
+
+@Article{SCINA,
+AUTHOR = {Zhang, Ze and Luo, Danni and Zhong, Xue and Choi, Jin Huk and Ma, Yuanqing and Wang, Stacy and Mahrt, Elena and Guo, Wei and Stawiski, Eric W and Modrusan, Zora and Seshagiri, Somasekar and Kapur, Payal and Hon, Gary C. and Brugarolas, James and Wang, Tao},
+TITLE = {SCINA: A Semi-Supervised Subtyping Algorithm of Single Cells and Bulk Samples },
+JOURNAL = {Genes},
+VOLUME = {10},
+YEAR = {2019},
+NUMBER = {7},
+ARTICLE-NUMBER = {531},
+URL = {https://www.mdpi.com/2073-4425/10/7/531},
+ISSN = {2073-4425},
+ABSTRACT = {Advances in single-cell RNA sequencing (scRNA-Seq) have allowed for comprehensive analyses of single cell data. However, current analyses of scRNA-Seq data usually start from unsupervised clustering or visualization. These methods ignore prior knowledge of transcriptomes and the probable structures of the data. Moreover, cell identification heavily relies on subjective and possibly inaccurate human inspection afterwards. To address these analytical challenges, we developed SCINA (Semi-supervised Category Identification and Assignment), a semi-supervised model that exploits previously established gene signatures using an expectation&ndash;maximization (EM) algorithm. SCINA is applicable to scRNA-Seq and flow cytometry/CyTOF data, as well as other data of similar format. We applied SCINA to a wide range of datasets, and showed its accuracy, stability and efficiency, which exceeded most popular unsupervised approaches. SCINA discovered an intermediate stage of oligodendrocytes from mouse brain scRNA-Seq data. SCINA also detected immune cell population changes in cytometry data in a genetically-engineered mouse model. Furthermore, SCINA performed well with bulk gene expression data. Specifically, we identified a new kidney tumor clade with similarity to FH-deficient tumors (FHD), which we refer to as FHD-like tumors (FHDL). Overall, SCINA provides both methodological advances and biological insights from perspectives different from traditional analytical methods.},
+DOI = {10.3390/genes10070531}
+}
+
+@article{kiselev_scmap_2018,
+    title = {scmap: projection of single-cell {RNA}-seq data across data sets},
+    volume = {15},
+    issn = {1548-7105},
+    url = {https://doi.org/10.1038/nmeth.4644},
+    doi = {10.1038/nmeth.4644},
+    abstract = {scmap enables the comparison of disparate single-cell RNA-seq data sets by projecting individual cells or clusters from a query sample onto a reference sample or cell atlas.},
+    number = {5},
+    journal = {Nature Methods},
+    author = {Kiselev, Vladimir Yu and Yiu, Andrew and Hemberg, Martin},
+    year = {2018},
+    keywords = {细胞注释},
+    pages = {359--362},
+}
+
+
+@article{li_scibet_2020,
+    title = {{SciBet} as a portable and fast single cell type identifier},
+    volume = {11},
+    issn = {2041-1723},
+    url = {https://doi.org/10.1038/s41467-020-15523-2},
+    doi = {10.1038/s41467-020-15523-2},
+    abstract = {Fast, robust and technology-independent computational methods are needed for supervised cell type annotation of single-cell RNA sequencing data. We present SciBet, a supervised cell type identifier that accurately predicts cell identity for newly sequenced cells with order-of-magnitude speed advantage. We enable web client deployment of SciBet for rapid local computation without uploading local data to the server. Facing the exponential growth in the size of single cell RNA datasets, this user-friendly and cross-platform tool can be widely useful for single cell type identification.},
+    number = {1},
+    journal = {Nature Communications},
+    author = {Li, Chenwei and Liu, Baolin and Kang, Boxi and Liu, Zedao and Liu, Yedan and Chen, Changya and Ren, Xianwen and Zhang, Zemin},
+    year = {2020},
+    keywords = {细胞注释},
+    pages = {1818},
+}
+
+
+@article{choi_sctyper_2020,
+    title = {{scTyper}: a comprehensive pipeline for the cell typing analysis of single-cell {RNA}-seq data},
+    volume = {21},
+    issn = {1471-2105},
+    url = {https://doi.org/10.1186/s12859-020-03700-5},
+    doi = {10.1186/s12859-020-03700-5},
+    abstract = {Recent advances in single-cell RNA sequencing (scRNA-seq) technology have enabled the identification of individual cell types, such as epithelial cells, immune cells, and fibroblasts, in tissue samples containing complex cell populations. Cell typing is one of the key challenges in scRNA-seq data analysis that is usually achieved by estimating the expression of cell marker genes. However, there is no standard practice for cell typing, often resulting in variable and inaccurate outcomes.},
+    number = {1},
+    journal = {BMC Bioinformatics},
+    author = {Choi, Ji-Hye and In Kim, Hye and Woo, Hyun Goo},
+    year = {2020},
+    keywords = {细胞注释},
+    pages = {342},
+}
+
+@article{cellchat,
+  title={Inference and analysis of cell-cell communication using CellChat},
+  author={Jin, Suoqin and Guerrero-Juarez, Christian F and Zhang, Lihua and Chang, Ivan and Ramos, Raul and Kuan, Chen-Hsiang and Myung, Peggy and Plikus, Maksim V and Nie, Qing},
+  url={https://www.nature.com/articles/s41467-021-21246-9},
+  journal={Nature communications},
+  volume={12},
+  number={1},
+  pages={1--20},
+  year={2021},
+  publisher={Nature Publishing Group}
+}
+
+@article{gsva,
+  title={GSVA: gene set variation analysis for microarray and RNA-seq data},
+  author={H{\"a}nzelmann, Sonja and Castelo, Robert and Guinney, Justin},
+  journal={BMC bioinformatics},
+  volume={14},
+  url={https://link.springer.com/article/10.1186/1471-2105-14-7},
+  number={1},
+  pages={1--15},
+  year={2013},
+  publisher={Springer}
+}
+
+@article{msigdb,
+  title={Gene set enrichment analysis: a knowledge-based approach for interpreting genome-wide expression profiles},
+  author={Subramanian, Aravind and Tamayo, Pablo and Mootha, Vamsi K and Mukherjee, Sayan and Ebert, Benjamin L and Gillette, Michael A and Paulovich, Amanda and Pomeroy, Scott L and Golub, Todd R and Lander, Eric S and others},
+  journal={Proceedings of the National Academy of Sciences},
+  url={https://www.pnas.org/doi/abs/10.1073/pnas.0506580102},
+  volume={102},
+  number={43},
+  pages={15545--15550},
+  year={2005},
+  publisher={National Acad Sciences}
+}
+
+@article{string,
+  title={The STRING database in 2021: customizable protein--protein networks, and functional characterization of user-uploaded gene/measurement sets},
+  author={Szklarczyk, Damian and Gable, Annika L and Nastou, Katerina C and Lyon, David and Kirsch, Rebecca and Pyysalo, Sampo and Doncheva, Nadezhda T and Legeay, Marc and Fang, Tao and Bork, Peer and others},
+  journal={Nucleic acids research},
+  volume={49},
+  url={https://academic.oup.com/nar/article/49/D1/D605/6006194},
+  number={D1},
+  pages={D605--D612},
+  year={2021},
+  publisher={Oxford University Press}
+}
+
+@article{hpca,
+  title={An expression atlas of human primary cells: inference of gene function from coexpression networks},
+  author={Mabbott, Neil A and Baillie, J Kenneth and Brown, Helen and Freeman, Tom C and Hume, David A},
+  journal={BMC genomics},
+  volume={14},
+  url={https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-14-632},
+  number={1},
+  pages={1--13},
+  year={2013},
+  publisher={BioMed Central}
+}
+
+@article{blueprint,
+  title={BLUEPRINT: mapping human blood cell epigenomes},
+  author={Martens, Joost HA and Stunnenberg, Hendrik G},
+  journal={Haematologica},
+  volume={98},
+  number={10},
+  url={https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3789449/},
+  pages={1487},
+  year={2013},
+  publisher={Ferrata Storti Foundation}
+}
+
+@article{encode,
+  title={An integrated encyclopedia of DNA elements in the human genome},
+  author={ENCODE Project Consortium and others},
+  journal={Nature},
+  volume={489},
+  url={https://www.nature.com/articles/nature11247},
+  number={7414},
+  pages={57},
+  year={2012},
+  publisher={NIH Public Access}
+}
+
+
+﻿@Article{scvi,
+author={Gayoso, Adam
+and Lopez, Romain
+and Xing, Galen
+and Boyeau, Pierre
+and Valiollah Pour Amiri, Valeh
+and Hong, Justin
+and Wu, Katherine
+and Jayasuriya, Michael
+and Mehlman, Edouard
+and Langevin, Maxime
+and Liu, Yining
+and Samaran, Jules
+and Misrachi, Gabriel
+and Nazaret, Achille
+and Clivio, Oscar
+and Xu, Chenling
+and Ashuach, Tal
+and Gabitto, Mariano
+and Lotfollahi, Mohammad
+and Svensson, Valentine
+and da Veiga Beltrame, Eduardo
+and Kleshchevnikov, Vitalii
+and Talavera-L{\'o}pez, Carlos
+and Pachter, Lior
+and Theis, Fabian J.
+and Streets, Aaron
+and Jordan, Michael I.
+and Regier, Jeffrey
+and Yosef, Nir},
+title={A Python library for probabilistic analysis of single-cell omics data},
+journal={Nature Biotechnology},
+year={2022},
+month={Feb},
+day={01},
+volume={40},
+number={2},
+pages={163-166},
+issn={1546-1696},
+doi={10.1038/s41587-021-01206-w},
+url={https://doi.org/10.1038/s41587-021-01206-w}
+}
+

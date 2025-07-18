@@ -1,0 +1,322 @@
+---
+bibliography: references.bib
+execute:
+  echo: false
+  warning: false
+format: 
+  aria-html: 
+    format-links: false
+  paged-html:
+    output-file: report-paged.html
+  aria-docx: default
+lang: en
+language:
+  en:
+    section-title-references: "参考文献"
+    section-title-abstract: "摘要"
+    section-title-appendices: "附录"
+    section-title-footnotes: "脚注"
+    crossref-fig-title: "图"
+    crossref-tbl-title: "表"
+fig-cap-location: top
+lightbox: false
+fancybox: false
+params:
+  title: "单细胞3'转录组标准分析报告"
+  paged: false
+title: '{{< meta params.title >}}'
+project:
+  type: default
+  execute-dir: file
+---
+
+```{r}
+library(htmltools)
+library(gt)
+library(dplyr)
+library(knitr)
+library(flextable)
+set_flextable_defaults(
+  # border.color = "gray",
+  big.mark = ",",
+  digits = 2
+)
+```
+
+
+```{r}
+is_paged <- function() {
+  params$paged
+}
+
+logo_img <- file.path("./static/images/logo.png")
+if (knitr::is_html_output()) {
+  tags$script(htmltools::HTML(sprintf(r"(
+var bodyTag = document.getElementsByTagName('body')[0];
+
+text = `
+<div class="navbar fixed-top navbar-color page-columns page-layout-article">
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"></div>
+    <div class = "content">
+      <div class = "d-flex navbar-report align-items-end">
+        <div class = "me-auto" style = "font-weight: 500">
+          <img style="height: 30px" src="%s">
+        </div>
+        <div style = "padding-left: 1rem;">
+          <div></div>
+        </div>
+    </div>
+</div>`;
+
+bodyTag.insertAdjacentHTML("afterbegin", text);
+)", xfun::base64_uri(logo_img))))
+}
+```
+
+```{r}
+# 全局函数
+
+`%not_in%` <- function(x, table) {
+  !(x %in% table)
+}
+
+#' 无头表格，用于项目信息展示
+headerless_tbl <- function(df) {
+  quarto_process <- knitr::is_html_output()
+  gt(df) |>
+    tab_options(column_labels.hidden = TRUE, table.width = pct(100), quarto.disable_processing = quarto_process) |>
+    cols_width(1 ~ px(100)) |>
+    tab_style(
+      style = list(
+        cell_fill(color = "#E8ECF4"),
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(1)
+    )
+}
+
+#' 通用表格
+tbl <- function(df) {
+  gt(df) |>
+    tab_options(table.width = pct(100), column_labels.font.weight = "bold") |>
+    cols_align(align = "left")
+}
+
+is_need_percent <- function(x) {
+  is.numeric(x) && (!is.integer(x)) && all(x < 1 & x > 0)
+}
+
+#' 自动对表格进行格式化
+auto_format <- function(gt_tbl) {
+  gt_tbl |>
+    fmt_integer() |>
+    fmt_percent(columns = where(is_need_percent))
+}
+
+long_tbl <- function(df,nrow = 50) {
+  df <- head(df,n = nrow)
+  if (knitr::is_html_output()) {
+    gt(df) |> 
+      opt_interactive() |> 
+      tab_options(table.width = pct(100), column_labels.font.weight = "bold") |>
+      cols_align(align = "left")
+  } else {
+    gt(df)
+  }
+}
+
+carousel <- function(items,id = NULL,duration = 5000) {
+  if (is.null(id)) {
+    id <- paste("gallery", htmlwidgets:::createWidgetId(6), sep = "-")
+  }
+  index <- -1
+  items <- lapply(items, function(item) {
+    index <<- index + 1
+    if (!is.list(item)) {
+      item <- list(image = item)
+    }
+    item$link <- paste0(id,"-",index)
+    content <- tags$div(
+      # href = xfun::base64_uri(item$image),
+      # class="lightbox",
+      tags$img(src = item$image,class="img-fluid figure-img"),
+      # `data-gallery` = id,
+      # `data-title` = item$title,
+      # `data-description` = item$description,
+      # `data-sizes`="(max-width: 80%)"
+    )
+    carouselItem(item$caption, content, item$link, index, duration)
+  })
+
+  indicators <- div(
+    class = "carousel-indicators",
+    tagList(lapply(items, function(item) item$button))
+  )
+  items <- div(
+    class = "carousel-inner",
+    tagList(lapply(items, function(item) item$item))
+  )
+  div(
+    id = id, class = "carousel carousel-dark slide", `data-bs-ride` = "carousel",
+    indicators,
+    items,
+    navButton(id, "prev", "Prevoius"),
+    navButton(id, "next", "Next")
+  )
+}
+
+# carousel item
+carouselItem <- function(caption, content, link, index, duration = 5000) {
+  button <- tags$button(
+    type = "button",
+    `data-bs-target` = "#gallery-carousel",
+    `data-bs-slide-to` = index,
+    `aria-label` = paste("Slide", index + 1)
+  )
+  if (index == 0) {
+    button <- tagAppendAttributes(button,
+      class = "active",
+      `aria-current` = "true"
+    )
+  }
+  item <- tags$div(
+    class = paste0("carousel-item", ifelse(index == 0, " active", "")),
+    `data-bs-interval` = duration,
+    content,
+    tags$div(
+      class = "carousel-caption d-none d-md-block",
+      tags$p(class = "fw-light", caption)
+    )
+  )
+  list(
+    button = button,
+    item = item
+  )
+}
+
+# nav button
+navButton <- function(targetId, type, text) {
+  tags$button(
+    class = paste0("carousel-control-", type),
+    type = "button",
+    `data-bs-target` = paste0("#", targetId),
+    `data-bs-slide` = type,
+    span(
+      class = paste0("carousel-control-", type, "-icon"),
+      `aria-hidden` = "true"
+    ),
+    span(class = "visually-hidden", text)
+  )
+}
+
+valid_files <- function(files) {
+  for (file in files) {
+    # url跳过
+    if (grepl("^[a-zA-Z]+://", file)) {
+      next
+    }
+    if (!file.exists(file)) {
+      stop(file, "must be exists.")
+    }
+  }
+  invisible(NULL)
+}
+
+
+slide_html <- function(file, id, html_box, width = "100%", height = "auto") {
+  tag_res <- tags$a(
+    href = file,
+    enlarge(),
+    tags$iframe(
+      src = file,
+      width = width,
+      height = height,
+      frameborder = "no",
+      border = 0,
+      scrolling = "yes",
+      marginwidth = 0,
+      marginheight = 0
+    )
+  )
+  if (html_box) {
+    tag_res <- tag_res |>
+      htmltools::tagAppendAttributes(
+        `data-fancybox` = id, `data-type` = "iframe"
+      )
+  } else {
+    tag_res <- tag_res |>
+      htmltools::tagAppendAttributes(target = "_blank")
+  }
+  tag_res
+}
+
+#' 通用函数
+#' @param title 每个图片的标题
+#' @param caption 
+
+fancybox <- function(items,
+                     width = "70%",
+                     height = "auto",
+                     id = NULL,
+                     html_box = FALSE,
+                         ...) {
+  if (is.null(id)) {
+    id <- paste("gallery", htmlwidgets:::createWidgetId(6), sep = "-")
+  }
+
+  index <- 0
+  slide <- lapply(items, function(item) {
+    index <<- index + 1
+    if (!is.list(item)) {
+      item <- list(image = item)
+    }
+    item$link <- paste0(id,"-",index)
+    tag_res <- tags$a(
+      `data-fancybox` = id,
+      `data-caption` = item$title,
+      href = item$image,
+      tags$img(
+        `data-lazy-src` = item$image,
+        class = "img-fluid figure-img fixed-img"
+      )
+    )
+    tag <- tags$div(
+      class = "carousel__slide",
+      tag_res
+    )
+  })
+  slide <- tagList(slide)
+  carousel_class <- "carousel"
+  if (width == "100%") carousel_class <- "carousel carousel-html"
+  html <- tagList(
+    tags$div(
+      style = "margin-bottom: 1.5rem;",
+      class = carousel_class,
+      style = sprintf("height: %s;width: %s;",height,width),
+      slide
+    ),
+  )
+  html
+}
+
+#' 更加通用，适合包含多张图片，并且适合不同的输出格式
+include_figs <- function(items,id = NULL,fancybox = FALSE) {
+  if (knitr::is_html_output() && !is_paged()) {
+    if (fancybox) {
+      fancybox(items = items,id = id)
+    } else {
+      carousel(items,id = id)
+    }
+  } else {
+    if (!is.list(items)) {
+      images <- items
+    } else {
+      images <- purrr::map_chr(items,function(x) x$image)
+    }
+    knitr::include_graphics(images)
+  }
+}
+```
+
+
+{{< include _basic.qmd >}}

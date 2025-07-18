@@ -1,0 +1,32 @@
+[project]
+name = "space-sketcher"
+version = "1.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.setuptools]
+packages = { find = {} }  # 自动发现所有包
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.uv.workspace]
+members = [
+    "Space-sketcher-dev",
+]
+
+
+[project.scripts]
+space-sketcher = "space_sketcher.main:main"
+
+[tool.rye.scripts]
+# 运行主程序,rye run dev
+dev = "python space_sketcher/main.py"

@@ -1,0 +1,8 @@
+### 差异基因
+
+差异基因（Differentially Expressed Genes, DEGs）分析是指在单细胞RNA测序数据中，比较不同细胞群体（如不同细胞类型、不同状态或不同实验条件下的细胞）之间的基因表达水平，以识别在这些群体之间显著差异表达的基因。
+
+```{r}
+images <- list.files("../05.deg",pattern = "*.png",full.names = TRUE)
+include_figs(images)
+```

@@ -1,0 +1,21 @@
+.navbar-color {
+  background-color: #517699;
+  color: #fdfefe;
+  margin-bottom: 2rem;
+  padding: 0.7rem 0;
+}
+
+.quarto-title {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #517699;
+}
+
+#quarto-content {
+  margin-top: 5rem;
+}
+
+
+html{
+  scroll-padding-top: 60px;
+}

@@ -1,0 +1,11 @@
+samples:
+  0530-0523-N24-03-C:
+    RNA: /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_1.fq.gz;/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-C/0530-0523-N24-03-C_raw_2.fq.gz
+    Oligo: /data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_1.fq.gz;/data03/lead/userdata/rawdata/scRNA/20250603/20250602_E250044041_GuangzhouLaboratory-QJY_C_1/00.mergeRawFq/0530-0523-N24-03-O/0530-0523-N24-03-O_raw_2.fq.gz
+    coord: /data03/lead/userdata/upstreamwork/spatialRNA_analysis/Puckfiles/10mm/N24-results/puck3/puck3_barcodes_src.csv
+    species: mouse
+
+outdir: "/data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/workflow/snakemake/examples"
+
+chemistry: "leader_v1" ##or 10X, other(If set to other, needs to be used with --mapparams).
+

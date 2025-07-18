@@ -1,0 +1,290 @@
+## 项目信息与样本信息
+
+
+```{r}
+#| label: tbl-project
+#| tbl-cap: 项目信息表
+if (!file.exists("../project.yaml")) {
+  stop("../project.yaml 文件必须存在")
+}
+project <- suppressWarnings(yaml::read_yaml("../project.yaml"))
+if ("报告时间" %not_in% names(project) || is.null(project[["报告时间"]])) {
+  project["报告时间"] <- as.character(Sys.Date())
+}
+
+project_message <- data.frame(
+  name = c("项目类型","合同编号","客户单位","报告时间")
+)
+project_message$value <- as.character(project[project_message$name])
+if (is_html_output()) {
+  headerless_tbl(project_message) |> 
+    tab_header(md("**项目信息表**")) |> 
+    tab_options(heading.background.color = "#eebf00",heading.border.lr.width = "50px")
+} else {
+  flextable(project_message) |> 
+    width(j = 1,width = 4,unit = "cm") |> 
+    width(j = 2,width = 7,unit = "cm") |> 
+    delete_part(part = "header")
+}
+
+```
+
+
+```{r}
+#| label: tbl-sample
+#| tbl-cap: 样本信息表
+sample_message <- data.frame(project$样本信息)
+if (is_html_output()) {
+  tbl(sample_message) |> 
+  tab_header(md("**样本信息表**")) |> 
+  tab_options(heading.background.color = "#eebf00")
+} else {
+  flextable(sample_message) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+
+```
+
+## 技术简介
+
+单细胞转录组测序（Single-cell RNA Sequencing），是一种在单个细胞水平上对 RNA 进行高通量测序和数据分析的技术。这种技术不仅能分析单个细胞个体与类型的表达信息，也有助于评估组织的细胞异质性。在研究中，单细胞转录组测序广泛应用于探索细胞分化、胚胎发育、免疫微环境、肿瘤异质性、神经科学、疾病治疗响应等领域。
+
+利德健康科技（广州）有限公司（以下简称利德）在单细胞转录组、免疫组、表观组、蛋白组以及空间转录组等底层技术上有着深厚的积累。利德的单细胞转录组方案，核心指标达到国内外行业标准，并且有主动细胞筛选等独特优势。
+
+
+## 实验方案
+
+### 样本处理
+
+所有收集的样本通过合适的处理方式（见 @tbl-sample-deal）最终获得合格的单细胞悬液。合格的单细胞悬液标准包括：活细胞率>80%，结团率<5%，细胞数>10 万个。
+
+```{r}
+#| label: tbl-sample-deal
+#| tbl-cap: 样本处理信息表
+df <- data.frame(
+  样本类型 = c("全血","脑脊液、腹水等液体","组织样本","冻存细胞悬液","细胞系"),
+  处理方式 = c("提取 PBMC","离心收集细胞","解离","复苏","消化、离心")
+)
+
+if (is_html_output()) {
+  tbl(df) |> 
+    cols_width(1 ~ px(100))
+} else {
+  flextable(df) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+
+```
+
+### 单细胞细胞分选与建库
+
+单细胞悬液调整到合适浓度，依次将细胞悬液、Beads Buffer 和 Droplet Oil 加载到芯片的 Cell、Beads、Oil 孔位，整个加载过程 1min 内完成，启动仪器生成油包水液滴。液滴生成后转移到 PCR 管中进行逆转录，然后破乳，纯化 cDNA 产物，再进行测序文库构建。
+
+
+### 测序
+
+将文库按照《MGI 环化试剂盒说明书》进行环化后，用 MGI 测序平台进行测序。数据按照以下流程进行分析。
+
+## 标准分析内容
+
+标准生信数据分析内容主要包括上游数据质控、单样本数据预处理、PCA 分析、多样本整合、细胞聚类、Marker 基因分析 [@seurat4]。
+
+### 上游数据质控
+
+各个样本的初步数据质控信息、以及表达矩阵，存储在 02.count 目录，每个子文件夹以样本名命名。质控信息以 HTML 格式存放，表达矩阵的组织形式为稀疏矩阵，每个样本对应三个文件，即 `barcodes.tsv`，`features.tsv`，`matrix.mtx`。
+
+### 单样本数据预处理
+
+数据预处理包括基因过滤、细胞过滤等。数据过滤阈值见 @tbl-qc-options。
+
+```{r}
+#| label: tbl-qc-options
+#| tbl-cap: 数据过滤阈值
+qc_options <- data.table::fread("../02.qc/qc_options.csv")
+if (is_html_output()) {
+  tbl(qc_options) |> 
+    cols_width(1 ~ px(100))
+} else {
+  flextable(qc_options) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+
+```
+
+:::: {.content-visible when-format="html"}
+::: {#tbl-qc layout="[[1,1], [1]]"}
+::::
+
+:::: {.content-visible when-format!="html"}
+::: {#tbl-qc layout-ncol=1}
+::::
+
+
+```{r}
+#| label: tbl-qc-raw
+#| tbl-cap: 过滤前
+
+qc_raw <- data.table::fread("../02.qc/raw_qc_summary.csv")
+colnames(qc_raw) <- c("样本","细胞数","中位基因数","中位 UMI 数")
+if (is_html_output()) {
+  tbl(qc_raw) |> 
+    auto_format()
+} else {
+  flextable(qc_raw) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+
+```
+
+```{r}
+#| label: tbl-qc-filter
+#| tbl-cap: 过滤后
+
+qc_filter <- data.table::fread("../02.qc/filtered_qc_summary.csv")
+colnames(qc_filter) <- c("样本","细胞数","中位基因数","中位 UMI 数")
+if (is_html_output()) {
+  tbl(qc_filter) |> 
+    auto_format()
+} else {
+  flextable(qc_filter) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+```
+
+```{r}
+#| label: tbl-qc-merge
+#| tbl-cap: 过滤前后的细胞数
+
+qc_raw$过滤后细胞数 <- qc_filter$细胞数
+qc_table <- qc_raw |> 
+  select(`样本`,`细胞数`,`过滤后细胞数`) |> 
+  rename("过滤前细胞数" = "细胞数") |> 
+  mutate(`剩余细胞比例` = `过滤后细胞数`/`过滤前细胞数`)
+
+if (is_html_output()) {
+  tbl(qc_table) |> 
+    auto_format()
+} else {
+  flextable(qc_table) |> 
+    set_table_properties(layout = "autofit",width = 1)
+}
+```
+
+样本质控信息
+:::
+
+
+
+数据过滤前后质控图如下：
+
+::: {#fig-qc_raw fig-cap="质控前小提琴图"}
+```{r}
+include_figs(items = list(
+  list(image = "../02.qc/raw_nFeature.png"),
+  list(image = "../02.qc/raw_nCount.png"),
+  list(image = "../02.qc/raw_mt.png")
+))
+```
+
+:::
+
+
+::: {#fig-qc_filter fig-cap="质控后小提琴图"}
+```{r}
+include_figs(items = list(
+  list(image = "../02.qc/filtered_nFeature.png"),
+  list(image = "../02.qc/filtered_nCount.png"),
+  list(image = "../02.qc/filtered_mt.png")
+))
+```
+
+:::
+
+
+### PCA 分析
+
+主成分 （PCA） 分析是一种简化、分析数据的方法，其核心思想是降维，即将多个变量通过线性变换组合以提取出较少个变量，且能代表数据集特征的多元统计分析方法。 在获得数百到数千个细胞中的基因表达量数据后，选取其中高度可变的基因进行下游的主成分分析，往往得到比使用所有基因更为有效的结果，因为整体的表达基因中存在大量无意义的信息，消除这些信息的情况下能提高下游分析的效率。基于高变基因进行主成分分析，选取特征值最大的 2 个主成分，样本在主成分二维空间的分布图如 @fig-pca 所示：
+
+![样本主成分分析(PCA)图](../03.cluster/pca_plot.png){#fig-pca}
+
+为了确认使用多少个主成分用于后续分析，使用 @fig-elbow 查看 PC 的解释方差曲线：
+
+![主成分分析骤降图](../03.cluster/elbow_plot.png){#fig-elbow}
+
+
+```{asis echo=file.exists("../03.cluster/integrated.png")}
+### 多样本整合
+
+单细胞整合（Single-cell Integration）是指将来自不同单细胞测序实验、不同生物样本或不同技术平台的数据进行联合分析，以便获得更全面和一致的生物学理解。单细胞整合的主要目标是克服不同数据集之间的技术和生物学差异，从而揭示数据集之间的共同特征和特定差异。
+
+单细胞整合的主要应用场景：
+1. 跨样本整合：例如，将来自不同个体或不同组织样本的单细胞数据进行整合，以了解不同条件下的细胞类型和状态。 
+2. 跨平台整合 ：将不同测序平台（如10x Genomics、Smart-seq2等）生成的单细胞数据进行整合，以便比较和综合分析。 
+3. 跨实验整合 ：将不同实验条件（如不同时间点、处理条件等）下的单细胞数据进行整合，以研究动态变化。 
+
+单细胞整合的主要挑战：
+1. 批次效应：不同实验批次之间的技术差异可能导致数据的系统性偏差，需要进行校正。 
+2. 数据规模和复杂性：单细胞数据通常具有高维度和高噪声，需要有效的降维和去噪方法。
+3. 生物异质性：不同样本之间的生物学差异需要与技术差异区分开来。
+
+
+我们默认采用 harmony [@harmony] 进行数据整合，也可以选择其他方法，如 CCA[@seurat_integrate]、SCVI [@scvi]等，整合结果如 @fig-Integration 所示：
+
+![整合前后 UMAP 图](../03.cluster/integrated.png){#fig-Integration}
+
+```
+
+### 细胞聚类
+
+细胞聚类（Single-cell Clustering）是指将单细胞测序数据中的细胞根据它们的基因表达模式进行分组，以识别不同的细胞类型或细胞状态。通过聚类分析，可以揭示组织或样本中存在的细胞异质性，为进一步的生物学研究提供基础。
+
+聚类结果使用 UMAP 方法进行可视化。
+
+![细胞聚类](../03.cluster/cluster.png){#fig-cluster}
+
+![](../03.cluster/cluster_by_sample.png)
+
+![不同cluster在样本中的分布](../03.cluster/cell_ratio.png){#fig-cell-ratio}
+
+### Marker 基因
+
+Marker 基因分析是单细胞 RNA 测序数据分析中的一个关键步骤，用于识别和注释不同细胞类型或细胞状态的特征基因。Marker 基因是指在特定细胞类型或状态中高表达，而在其他细胞类型或状态中低表达或不表达的基因。这些基因可以用来区分不同的细胞群体，帮助研究人员理解细胞异质性和组织复杂性。
+
+```{r}
+#| label: tbl-marker
+#| tbl-cap: Marker 基因
+marker <- data.table::fread("../04.marker_gene/all_markers.csv") |> 
+  dplyr::relocate(cluster,gene)
+
+if (is_html_output()) {
+  long_tbl(marker) |>
+    fmt_scientific(columns = c(p_val,p_val_adj)) |> 
+    fmt_number(avg_log2FC)
+} else {
+  flextable(head(marker)) |> 
+    set_table_properties(layout = "autofit",width = 1) |> 
+    colformat_double(digits = 2)
+}
+```
+
+@tbl-marker 仅展示前 50 行数据，全部的结果请查看文件 `04.marker_gene/all_markers.csv`。
+
+对每个簇（Cluster）,我们标准报告挑选了细胞簇 marker 基因进行可视化。
+
+![Marker 基因气泡图](../04.marker_gene/DotPlot.png){#fig-dotplot}
+
+
+![Marker 基因热图](../04.marker_gene/heatmap.png){#fig-heatmap}
+
+![Marker 基因堆积小提琴图](../04.marker_gene/Stacked_VlnPlot.png){#fig-stacked_vlplot}
+
+::: {#fig-marker-gene-feature fig-cap="每个 cluster Marker 基因的特征图"}
+
+```{r}
+images <- list.files("../04.marker_gene",pattern = "cluster.*feature.png",full.names = TRUE)
+include_figs(images)
+```
+:::
+
+```{r child = if(dir.exists("../05.deg")) "_deg.qmd"}
+```

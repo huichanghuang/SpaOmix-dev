@@ -1,0 +1,24 @@
+title: aria
+author: liripo
+version: 0.0.1
+quarto-required: ">=1.4.11"
+contributes:
+  project:
+    project:
+      type: book
+  formats:
+    html: 
+      embed-resources: true
+      toc: true
+      toc-location: right
+      number-sections: true
+      self-contained-math: false
+      css: style.css
+      toc-title: >
+        <span style="font-size:calc(1rem + 0.1vw);font-weight:bold;color:black;">目录</span>'
+    docx:
+      toc: false
+      number-sections: true
+      toc-title: 目录
+      toc-depth: 3
+      reference-doc: custom-reference-doc.docx

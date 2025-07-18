@@ -1,0 +1,41 @@
+from snakemake.utils import min_version
+from pathlib import Path
+from loguru import logger as log2
+import sys
+import os
+import json
+
+# 暂时将路径设置为我的环境
+os.environ["PATH"] = f'/data03/lead/userdata/huanghuichang/Software/miniconda3/bin:{os.environ["PATH"]}'
+
+SMK_PATH = Path(sys.path[0])
+
+configfile: os.path.join(SMK_PATH, "config/config.yaml")
+
+def check_config(config):
+    """
+    增加简单的输入参数检验
+    """
+    for key in ["samples","outdir"]:
+        if config.get(key) is None:
+            log2.error(f"配置文件 config 需要 {key} 参数，可以通过snakemake `--configfile` 或者 `--config` 参数设置")
+    return config
+
+
+check_config(config)
+
+log2.info(f"snakemake 配置如下：\n {json.dumps(config, indent = 2)}")
+outdir = Path(config["outdir"])
+
+all_input = [
+    expand(os.path.join(config["outdir"], "{sample}/.all_analysis.done"), sample=config["samples"]),
+    expand(os.path.join(config["outdir"], "{sample}/.fastqc.done"), sample=config["samples"])
+]
+
+
+rule all:
+    input:
+        all_input
+
+include: str(SMK_PATH / "rules" / "fastqc.smk")
+include: str(SMK_PATH / "rules" / "counts.smk")

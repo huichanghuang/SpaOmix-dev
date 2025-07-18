@@ -1,0 +1,37 @@
+title: paged
+author: liripo
+version: 0.0.1
+quarto-required: ">=1.4.11"
+contributes:
+  project:
+    project:
+      type: book
+  formats:
+    pdf:
+      pdf-engine: pagedjs-cli
+      pdf-engine-opts: ['--browserArgs','--no-sandbox','--media','print']
+      toc: true
+      format-links: false
+      embed-resources: true
+      toc-location: right
+      number-sections: true
+      page-layout: custom
+      include-in-header: 
+      - text: |
+          <script src="_extensions/paged/paged.polyfill.min.js"></script>
+          <link rel="stylesheet" type="text/css" href="_extensions/paged/print.css">
+          <link rel="stylesheet" type="text/css" href="_extensions/paged/preview.css" media="screen">
+      toc-title: "目录"
+    html:
+      toc: true
+      format-links: false
+      embed-resources: true
+      toc-location: right
+      number-sections: true
+      page-layout: custom
+      include-in-header: 
+      - text: |
+          <script src="_extensions/paged/paged.polyfill.min.js"></script>
+          <link rel="stylesheet" type="text/css" href="_extensions/paged/print.css">
+          <link rel="stylesheet" type="text/css" href="_extensions/paged/preview.css" media="screen">
+      toc-title: "目录"
