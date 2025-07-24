@@ -5,6 +5,8 @@ nobam: true
 dev: true
 velo: true
 species: mouse
+forcecells: 0
+minrnaumi: 200
 mapparams: ""
 cbwhitelist: ""
 sbwhitelist: ""

@@ -9,7 +9,7 @@ rule fastq_qc:
     params:
         fastqc = "/data03/lead/userdata/huanghuichang/Software/miniconda3/bin/fastqc",
         out_dir = os.path.join(config["outdir"], "{sample}"),
-    threads: 3,
+    threads: 6,
     resources:
         mem_gib=3,
     log: os.path.join(config["outdir"], "log/{sample}.fastq_qc.log"),

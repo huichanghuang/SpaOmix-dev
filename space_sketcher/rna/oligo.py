@@ -53,8 +53,6 @@ class Oligo:
         judgeFilexits(
             self.oligor1,
             self.oligor2,
-            self.cbwhitelist,
-            self.sbwhitelist
             )
         # run stat_spatial_barcodes
         if not os.path.exists(f"{oligodir}/spatial_umis.csv.gz"):
@@ -62,7 +60,7 @@ class Oligo:
                 f'Extracting spatial barcode information.')
             stat_spatial_barcodes(self.oligor1, self.oligor2, 
                                 self.oligochip, 
-                                self.rnachemistry, self.mapparams,
+                                self.rnachemistry, f'{self.mapparams}',
                                 self.cbwhitelist, self.sbwhitelist,
                                 oligodir, self.threads)
         else:
@@ -88,7 +86,7 @@ class Oligo:
         ###Filter cell barcode by dbscan clustering
         # judge file exits
         judgeFilexits(
-            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered",
+            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell",
             f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/CellReads.stats",
             f"{oligodir}/cb_sb_coord.txt",
             )
@@ -99,7 +97,7 @@ class Oligo:
         dbscan_filter(f"{oligodir}/cb_sb_coord.txt",
                       oligodir, 
                       self.maxumi, self.minumi, 
-                      f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered", 
+                      f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell", 
                       f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/CellReads.stats", 
                       self.eps, self.min_samples, self.threads)        
 

@@ -22,8 +22,8 @@ class Runpipe:
         self.mapparams = args.mapparams
         self.threads = args.threads        
         self.calling_method = args.calling_method
-        self.maxumi = args.maxumi
-        self.minumi = args.minumi
+        self.maxoligoumi = args.maxoligoumi
+        self.minoligoumi = args.minoligoumi
         self.eps = args.eps
         self.min_samples = args.min_samples
         self.minfeatures = args.minfeatures
@@ -31,6 +31,8 @@ class Runpipe:
         self.ndims = args.ndims
         self.nvariables = args.nvariables
         self.resolution = args.resolution
+        self.forcecells = args.forcecells
+        self.minrnaumi = args.minrnaumi
         self.dev = args.dev
         self.nobam = args.nobam
         self.velo = args.velo
@@ -43,12 +45,14 @@ class Runpipe:
         else:
             self.cbwhitelist = None
 
-        self.sbwhitelist = (
-            args.sbwhitelist
-            if args.sbwhitelist is not None
-            else os.path.join(__root_dir__, 
-                              "data/sbwhitelist/sbwhitelist.txt")
-        )
+        if args.sbwhitelist is not None:
+            self.sbwhitelist = args.sbwhitelist
+        elif self.oligochip == "LD":
+            self.sbwhitelist = os.path.join(__root_dir__, 
+                              "data/sbwhitelist/sbwhitelist.txt")   
+        else:
+            self.sbwhitelist = None
+
         self.reference = (
             args.reference
             if args.reference is not None
@@ -75,8 +79,6 @@ class Runpipe:
             self.oligor2,
             self.genomeDir,
             self.coordfile,
-            self.cbwhitelist,
-            self.sbwhitelist
             )
 
         print(bin_path())
@@ -95,12 +97,14 @@ class Runpipe:
             f"--threads {self.threads}",
             f"--genomeDir {self.genomeDir}",
             f"--calling_method {self.calling_method}",
+            f"--forcecells {self.forcecells}",
+            f"--minumi {self.minrnaumi}",
         ]
         # Add optional parameters if they exist
         if self.cbwhitelist is not None:
             count_cmd.append(f"--cbwhitelist {self.cbwhitelist}")
         if self.mapparams is not None:
-            count_cmd.append(f"--mapparams {self.mapparams}")
+            count_cmd.append(f"--mapparams \'{self.mapparams}\'")
         if self.velo:
             count_cmd.append(f"--velo")
         count_cmd  = ' '.join(count_cmd) 
@@ -112,21 +116,22 @@ class Runpipe:
             f"--outdir {self.outdir}",
             f"--oligor1 {self.oligor1}",
             f"--oligor2 {self.oligor2}",
-            f"--sbwhitelist {self.sbwhitelist}",
             f"--rnachemistry {self.rnachemistry}",
             f"--oligochip {self.oligochip}",
             f"--threads {self.threads}",
             f"--coordfile {self.coordfile}",
-            f"--maxumi {self.maxumi}",
-            f"--minumi {self.minumi}",
+            f"--maxumi {self.maxoligoumi}",
+            f"--minumi {self.minoligoumi}",
             f"--eps {self.eps}",
             f"--min_samples {self.min_samples}",
         ]
         # Add optional parameters if they exist
         if self.cbwhitelist is not None:
             oligo_cmd.append(f"--cbwhitelist {self.cbwhitelist}")
+        if self.sbwhitelist is not None:
+            oligo_cmd.append(f"--sbwhitelist {self.sbwhitelist}")
         if self.mapparams is not None:
-            oligo_cmd.append(f"--mapparams {self.mapparams}")
+            oligo_cmd.append(f"--mapparams \'{self.mapparams}\'")
         oligo_cmd  = ' '.join(oligo_cmd) 
 
 
@@ -149,9 +154,10 @@ class Runpipe:
             f"--outdir {self.outdir}",
             f"--reference {self.reference}",
             f"--rnachemistry {self.rnachemistry}",
+            f"--oligochip {self.oligochip}",
         ]
         if self.dev:
-            report_cmd.append(f"--dev")        
+            report_cmd.append(f"--dev")
         report_cmd = ' '.join(report_cmd)
         
         cmdlist = collections.OrderedDict()
@@ -207,8 +213,8 @@ def run_app(
     mapparams: Annotated[Optional[str], typer.Option("--mapparams", "-mp", help="Additional STAR mapping parameters (required for 'other' chemistry)")] = None,
     threads: Annotated[int, typer.Option("--threads", "-t", help="Number of threads")] = 4,
     calling_method: Annotated[str, typer.Option("--calling_method", help="Cell calling method: CellRanger2.2/EmptyDrops_CR")] = "EmptyDrops_CR",
-    maxumi: Annotated[int, typer.Option("--maxumi", help="Max UMI threshold for filtering")] = 5000,
-    minumi: Annotated[int, typer.Option("--minumi", help="Min UMI threshold for filtering")] = 2,
+    maxoligoumi: Annotated[int, typer.Option("--maxumi", help="Max oligo UMI threshold for filtering")] = 5000,
+    minoligoumi: Annotated[int, typer.Option("--minoligoumi", help="Min oligo UMI threshold for filtering")] = 2,
     eps: Annotated[float, typer.Option("--eps", help="DBSCAN epsilon (max distance)")] = 150.0,
     min_samples: Annotated[int, typer.Option("--min_samples", help="DBSCAN min points per cluster")] = 6,
     minfeatures: Annotated[int, typer.Option("--minfeatures", help="Min features per cell")] = 5,
@@ -217,6 +223,8 @@ def run_app(
     nvariables: Annotated[int, typer.Option("--nvariables", help="Number of variable genes")] = 2000,
     resolution: Annotated[float, typer.Option("--resolution", help="Clustering resolution")] = 0.5,
     reference: Annotated[Optional[str], typer.Option("--reference", help="Reference name (default: genomeDir basename)", show_default=False)] = None,
+    forcecells: Annotated[int, typer.Option("--forcecells", help="Force pipeline to use this number of beads, bypassing cell calling algorithm.")] = 0,
+    minrnaumi: Annotated[int, typer.Option("--minrnaumi", help="The min rna umi for use emptydrops")] = 200,
     dev: Annotated[bool, typer.Option("--dev", help="Enable development mode (default: False)")] = False,
     nobam: Annotated[bool, typer.Option("--nobam", help="Remove BAM files after running (default: False)")] = False,
     velo: Annotated[bool, typer.Option("--velo", help="Enable STARsolo Velocyto mode (default: False)")] = False

@@ -8,7 +8,7 @@ from itertools import takewhile
 from typing import Tuple, Dict, Set, List
 import polars as pl
 from space_sketcher.tools.utils import add_log
-
+from loguru import logger
 
 CHUNK_SIZE = 5_000_000    # 每个chunk处理5M reads
 
@@ -19,7 +19,10 @@ def read_whitelist_files(file_path: str) -> Set[str]:
 
 def get_whitelist(cb_file: str, chem: str, params: str = None) -> Set[str]:
     """使用numpy加速白名单处理"""
-    base_wl = read_whitelist_files(cb_file)
+    
+    if cb_file is not None:
+        base_wl = read_whitelist_files(cb_file)
+    
     if chem == "10X":
         return base_wl
     elif chem == "leader_v1":
@@ -128,9 +131,12 @@ def process_complex_case(parts: List[str], pos_info: Dict) -> None:
         _, start, _, end = cb_val.split('_')
         pos_info["cbstart"].append(int(start))
         pos_info["cblen"].append(int(end) - int(start) + 1)
-        
-    pos_info["umistart"] = int(parts[parts.index("--soloUMIstart") + 1]) - 1
-    pos_info["umilen"] = int(parts[parts.index("--soloUMIlen") + 1])
+
+    umi_index = parts.index("--soloUMIposition")
+    umi_values = list(takewhile(lambda x: not x.startswith("--"), parts[umi_index + 1:]))[0]
+    _, start, _, end = umi_values.split('_')
+    pos_info["umistart"] = int(start)
+    pos_info["umilen"] = int(end) - int(start) + 1
 
 
 def hamming_match_position_levenshtein(seq: str, pattern: str, max_mismatches: int = 1) -> int:
@@ -187,9 +193,9 @@ def auto_detect_sb(seq: str, linkers: list) -> Tuple[str, bool]:
             return ""
 
     elif len(linkers) == 1:
-        linker_pos, perfect = find_linker(seq, linkers[0])
+        linker_pos = find_linker(seq, linkers[0])
         if linker_pos != -1 and linker_pos >= 30:
-            return seq[linker_pos - 30:linker_pos], perfect
+            return seq[linker_pos - 30:linker_pos]
         else:
             return ""
 
@@ -357,11 +363,12 @@ def process_fastq_multithread(
         pipeline = SimplePipeline()
         stats = runner.run(pipeline, Progress(every=1), outfiles=outfiles)
 
-    import subprocess
+    # import subprocess
     final_path = f"{outdir}/spatial_umis.csv"
 
     # 拼接内容文件（按顺序追加）
-    subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
+    # subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
+    os.system(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}")
 
     results = pl.read_csv(f"{outdir}/spatial_umis.csv",
                           new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)

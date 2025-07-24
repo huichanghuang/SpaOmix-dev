@@ -11,6 +11,7 @@ class Report:
         self.kit = args.rnachemistry
         self.reference = args.reference
         self.dev = args.dev
+        self.oligochip = args.oligochip
 
     def run(self):
         ### import lib
@@ -26,6 +27,7 @@ class Report:
             self.name,
             self.kit,
             self.reference,
+            self.oligochip,
             self.dev
         )
         
@@ -42,6 +44,7 @@ def report_app(
     rnachemistry: Annotated[str, typer.Option("--rnachemistry", "-rc", help="Chemistry version: 10X/leader_v1/other")] = "leader_v1",
     reference: Annotated[Optional[str], typer.Option("--reference", help="Reference name (default: genomeDir basename)", show_default=False)] = None,    
     dev: Annotated[bool, typer.Option("--dev", help="Enable development mode (default: False)")] = False,
+    oligochip: Annotated[str, typer.Option("--oligochip", "-oc", help="Spatial chip version: LD/GM")] = "LD",
 ):
     """
     Generate report.

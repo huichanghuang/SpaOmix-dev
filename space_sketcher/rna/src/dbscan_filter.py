@@ -323,8 +323,8 @@ def sb_umi_distribution(df, cbs, cluster_type, outdir):
         df_cb = df[df["cb"] == cb]
         ax = fig.add_subplot(4, 5, i+1, projection='3d')
         ax.scatter(df_cb["xcoord"], df_cb["ycoord"], df_cb["umi_count"], c=df_cb["umi_count"], cmap='Blues', norm=norm)
-        ax.set_xlim(0, 10000)
-        ax.set_ylim(0, 10000)
+        # ax.set_xlim(0, 10000)
+        # ax.set_ylim(0, 10000)
         ax.set_title(cb, fontsize=10)
         ax.set_xlabel('X', fontsize=10)
         ax.set_ylabel('Y', fontsize=10)

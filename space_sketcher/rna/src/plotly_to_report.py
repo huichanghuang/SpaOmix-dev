@@ -225,12 +225,6 @@ my36colors = ['#E5D2DD', '#53A85F', '#F1BB72', '#F3B1A0', '#D6E7A3', '#57C3F3',
                 '#CCE0F5', '#CCC9E6', '#625D9E', '#68A180', '#3A6963', '#968175']
 
 
-# my36colors = ["#1F77B4", "#FF7F0E","#2CA02C","#D62728","#9467BD", "#8C564B",
-#             "#E377C2","#7F7F7F", "#BCBD22", "#17BECF", "#AEC7E8", "#FFBB78",
-#             "#98DF8A", "#FF9896", "#C5B0D5" ,"#C49C94", "#F7B6D2", "#C7C7C7",
-#             "#DBDB8D", "#9EDAE5"]
-
-
 def distribution_violin(clusterfile, samplename):
 
     clusterdf = pd.read_csv(clusterfile, header=0, sep="\t")
@@ -293,36 +287,19 @@ def _umap_theme(fig):
     return fig
 
 
-def spatial_scatter(_infile, _type = "UMI"):
-
-    clusterdf = pd.read_csv(_infile, header=0, sep="\t")
-    clusterdf["log_nUMI"] = np.log(clusterdf["nCount_Spatial"]+1)
-    clusterdf = clusterdf.sort_values(by="Cluster")
-    clusterdf["Pct"] = clusterdf["Cluster"].map(clusterdf["Cluster"].value_counts(normalize=True))
-    clusterdf["Cluster"] = clusterdf["Cluster"].astype("category")
-    ##sort the clusterdf by the Cluster column
-    clusterdf = clusterdf.sort_values(by="Cluster")
-    n_cluster = clusterdf["Cluster"].nunique()
-    seq_colors = [my36colors[i] for i in range(n_cluster)]
-
-    if _type == "Cluster":
-        fig1 = _umap_theme(px.scatter(clusterdf, 
-                                      x="xcoord", 
-                                      y="ycoord", 
-                                      color="Cluster",
-                                      hover_data=["Pct"],
-                                      color_discrete_sequence=seq_colors,
-                                      ))    
-        fig1.update_layout(
-            title=dict(text="Cells Colored by Cluster", font=dict(size=15), x=0.5, y=0.95),
-            legend=dict(
-                title="",
-                borderwidth=0,
-            ),
-        )
-        fig1.update_traces(marker_size=3)
+def check_layout(clusterdf, fig, oligochip="LD"):
+    """
+    调整绘图布局，根据芯片类型设置坐标轴范围和刻度
+    参数:
+    clusterdf - 包含坐标数据的DataFrame
+    fig - 要调整的图形对象
+    oligochip - 芯片类型，可选"LD"或"GM"
+    返回:
+    调整后的图形对象
+    """
+    if oligochip == "LD":
         ###x, y 轴范围
-        fig1.update_layout(
+        fig.update_layout(
             autosize=True,
             plot_bgcolor='white', ###set the background color
             xaxis_tickvals=[0, 2000,4000,6000,8000],
@@ -336,6 +313,78 @@ def spatial_scatter(_infile, _type = "UMI"):
                 scaleratio=1,      # 比例1:1
                 constrain="domain",  # 限制轴范围
                 range=[0, 9399]))
+                
+    elif oligochip == "GM":
+        ymax = max(clusterdf['ycoord'])
+        ymin = min(clusterdf['ycoord'])
+        xmax = max(clusterdf['xcoord'])
+        xmin = min(clusterdf['xcoord'])        
+        # 计算最大范围并加10作为缓冲
+        max_range = max(ymax-ymin, xmax-xmin) + 10
+        center_x = (xmax + xmin) / 2
+        center_y = (ymax + ymin) / 2
+        # 设置轴范围以保持居中
+        xaxis_range = [center_x - max_range/2 -100, center_x + max_range/2 + 100]
+        yaxis_range = [center_y - max_range/2 -100, center_y + max_range/2 + 100]
+        # 生成2k间隔的刻度值
+        start_x = round(xaxis_range[0] / 2000) * 2000
+        end_x = round(xaxis_range[1] / 2000) * 2000
+        x_tickvals = list(range(int(start_x), int(end_x)+2000, 2000))
+        start_y = round(yaxis_range[0] / 2000) * 2000
+        end_y = round(yaxis_range[1] / 2000) * 2000
+        y_tickvals = list(range(int(start_y), int(end_y)+2000, 2000))
+        
+        fig.update_layout(
+            autosize=True,
+            plot_bgcolor='white',
+            xaxis_tickvals=x_tickvals,
+            yaxis_tickvals=y_tickvals,
+            yaxis_title=None, 
+            xaxis_title=None,
+            xaxis=dict(
+                range=xaxis_range,
+                constrain="domain"),
+            yaxis=dict(
+                scaleanchor="x",
+                scaleratio=1,
+                constrain="domain",
+                range=yaxis_range))
+                
+    else:
+        print("Not an available oligochip! Only LD or GM can be chosen")  
+
+    return fig
+
+def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
+
+    clusterdf = pd.read_csv(_infile, header=0, sep="\t")
+    clusterdf["log_nUMI"] = np.log(clusterdf["nCount_Spatial"]+1)
+    clusterdf = clusterdf.sort_values(by="Cluster")
+    clusterdf["Pct"] = clusterdf["Cluster"].map(clusterdf["Cluster"].value_counts(normalize=True))
+    clusterdf["Cluster"] = clusterdf["Cluster"].astype("category")
+    ##sort the clusterdf by the Cluster column
+    clusterdf = clusterdf.sort_values(by="Cluster")
+    color_map = {}
+    for i in range(len(clusterdf["Cluster"].unique())):
+        color_map[clusterdf["Cluster"].unique()[i]] = my36colors[i]
+
+    if _type == "Cluster":
+        fig1 = _umap_theme(px.scatter(clusterdf, 
+                                      x="xcoord", 
+                                      y="ycoord", 
+                                      color="Cluster",
+                                      hover_data=["Pct"],
+                                      color_discrete_sequence=color_map,
+                                      ))    
+        fig1.update_layout(
+            title=dict(text="Cells Colored by Cluster", font=dict(size=15), x=0.5, y=0.95),
+            legend=dict(
+                title="",
+                borderwidth=0,
+            ),
+        )
+        fig1.update_traces(marker_size=3)
+        fig1 = check_layout(clusterdf, fig1, oligochip)
         
         fig2 = _umap_theme(
             px.scatter(
@@ -344,7 +393,7 @@ def spatial_scatter(_infile, _type = "UMI"):
                 y="UMAP2",
                 color="Cluster",
                 hover_data=["Pct"],
-                color_discrete_sequence=seq_colors,
+                color_discrete_sequence=color_map,
             )
         )
         fig2.update_traces(marker_size=3)
@@ -370,20 +419,7 @@ def spatial_scatter(_infile, _type = "UMI"):
         )
         fig1.update_traces(marker_size=3)
         ###x, y 轴范围
-        fig1.update_layout(
-            autosize=True,
-            plot_bgcolor='white', ###set the background color
-            xaxis_tickvals=[0, 2000,4000,6000,8000],
-            yaxis_tickvals=[0, 2000,4000,6000,8000],
-            yaxis_title=None, xaxis_title=None,
-            xaxis=dict(
-                    range=[0, 9399],  # 根据实际数据范围调整
-                    constrain="domain"),  # 限制轴范围
-            yaxis=dict(
-                scaleanchor="x",  # y轴比例锚定到x轴
-                scaleratio=1,      # 比例1:1
-                constrain="domain",  # 限制轴范围
-                range=[0, 9399]))
+        fig1 = check_layout(clusterdf, fig1, oligochip)
         
         fig2 = _umap_theme(
             px.scatter(

@@ -20,6 +20,8 @@ def _set_count_params(wildcards):
     Oligo = config["samples"][wildcards.sample]["Oligo"].split(";")
     coord = config["samples"][wildcards.sample]["coord"]
     species = value.get("species",config["species"])
+    forcecells = value.get("forcecells",config["forcecells"])
+    minrnaumi = value.get("forcecells",config["minrnaumi"])
     genome_dir = get_references(species)
 
     ##可选参数
@@ -33,7 +35,7 @@ def _set_count_params(wildcards):
     sbwhitelist = '' if not sbwhitelist else f"--sbwhitelist {sbwhitelist}"
     
     mapparams = value.get("mapparams", config["mapparams"])
-    mapparams = '' if not mapparams else f"--mapparams {mapparams}"
+    mapparams = '' if not mapparams else f"--mapparams \'{mapparams}\'"
     
     nobam = value.get("nobam", config["nobam"])
     nobampar = '--nobam ' if nobam else ""
@@ -57,6 +59,8 @@ def _set_count_params(wildcards):
         f'--outdir {outdir} --name {sample} '
         f'--reference {species} '
         f'-t {threads} '
+        f'--minrnaumi {minrnaumi} '
+        f'--forcecells {forcecells} '
         f'{devpar} {nobampar} {velopar}'
     )
     return cmd

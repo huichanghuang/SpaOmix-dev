@@ -329,7 +329,7 @@ def format_summary(summary: dict):
 
     return formatted_summary
 
-def generate_report(indir: Path|str, sample, kit, reference, dev=True, cdn = False):
+def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True, cdn = False):
 
     ###prepare summary
     get_metrics(indir, sample, kit, reference)
@@ -697,7 +697,7 @@ def generate_report(indir: Path|str, sample, kit, reference, dev=True, cdn = Fal
     )
 
     #UMI distribution on UMAP and Spatial location
-    umi_fig1, umi_fig2 = spatial_scatter(metadata, "UMI")
+    umi_fig1, umi_fig2 = spatial_scatter(metadata, "UMI", oligochip)
     def _to_html(fig):
         return fig.to_html(
             full_html=False,
@@ -729,7 +729,7 @@ def generate_report(indir: Path|str, sample, kit, reference, dev=True, cdn = Fal
     )
 
     #Cluster distribution on UMAP and Spatial location
-    cluster_fig1, cluster_fig2 = spatial_scatter(metadata, "Cluster")
+    cluster_fig1, cluster_fig2 = spatial_scatter(metadata, "Cluster", oligochip)
     content = (
         f'<div class="row"><div class = "col-6">{_to_html(cluster_fig1)}'
         f'</div><div class = "col-6">'
@@ -856,10 +856,17 @@ def parse_args():
         type=str,
         help='The mapping reference.'
         )
+    parser.add_argument(
+        '-o', '--oligochip',
+        metavar='STR',
+        choices=["LD","GM"],
+        help='spatial chip version, only can be "LD" or "GM". [default: LD].',
+        default='LD'
+        )
     args = parse_args()
     return args
     
 
 if __name__=='__main__':
     args = parse_args()
-    generate_report(args.indir, args.sample, args.kit, args.reference, args.dev)
+    generate_report(args.indir, args.sample, args.kit, args.reference, args.oligochip, args.dev)

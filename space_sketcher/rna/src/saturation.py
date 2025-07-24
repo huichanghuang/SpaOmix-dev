@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import time
+import gzip
 import polars as pl
 import argparse
 import pandas as pd
@@ -43,10 +44,16 @@ def load_filter_barcodes(filterbarcodefile):
     Add prefix to filtered cell barcode
     """
     filterbarcodes = set()
-    with open(filterbarcodefile, 'r') as f:
-        for line in f:
-            modifiedcb = "CB:Z:" + line.strip()
-            filterbarcodes.add(modifiedcb)
+    if filterbarcodefile.endswith("gz"):
+        with gzip.open(filterbarcodefile, 'r') as f:
+            for line in f:
+                modifiedcb = "CB:Z:" + line.strip()
+                filterbarcodes.add(modifiedcb)    
+    else:
+        with open(filterbarcodefile, 'r') as f:
+            for line in f:
+                modifiedcb = "CB:Z:" + line.strip()
+                filterbarcodes.add(modifiedcb)
     return filterbarcodes
 
 
@@ -173,16 +180,16 @@ def count_saturation(indir, threads=4, lines=50000000):
     prepare_readinfo(indir, threads, lines)
 
     judgeFilexits(
-        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv"),
-        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/Summary.csv"),
+        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/callcell/barcodes.tsv.gz"),
+        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/Summary.callcell.csv"),
         os.path.join(indir, "readinfo.txt")
     )
 
     summary = csv2dict(
-        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/Summary.csv")
+        os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/Summary.callcell.csv")
     )
 
-    filterbarcodes = load_filter_barcodes(os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv"))
+    filterbarcodes = load_filter_barcodes(os.path.join(indir, "Solo.out/GeneFull_Ex50pAS/callcell/barcodes.tsv.gz"))
     results = downsample_and_calculate(os.path.join(indir, "readinfo.txt"), filterbarcodes)
     one_ratio = results[results["Sampling Fraction"]==1]
 

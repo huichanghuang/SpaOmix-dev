@@ -17,9 +17,8 @@ class Count:
         self.genomeDir = args.genomeDir
         self.calling_method = args.calling_method
         self.velo = args.velo
-        # self.expectcells = args.expectcells
-        # self.forcecells = args.forcecells
-        # self.minumi = args.minumi
+        self.forcecells = args.forcecells
+        self.minumi = args.minumi
         self.outdir = os.path.abspath(os.path.join(args.outdir,args.name))
 
     def Prepare_mapping_params(self) -> str:
@@ -70,7 +69,6 @@ class Count:
         judgeFilexits(
             self.rna1,
             self.rna2,
-            self.cbwhitelist,
             self.genomeDir,
             )
 
@@ -114,34 +112,24 @@ class Count:
         else:
             print(".STAR.done exits, skip running STAR.")
 
+        ###recall cell by umi=200 or forcell
+        ###Extract spatial barcodes
+        # judge file exits
+        matrixdir = os.path.join(rnadir, "Solo.out/GeneFull_Ex50pAS/raw")
+        outmatrix = os.path.join(rnadir, "Solo.out/GeneFull_Ex50pAS/callcell")
+        judgeFilexits(matrixdir)
+        callcell_cmd = (
+            f"{__root_dir__}/software/Rscript {__root_dir__}/rna/src/cell_identify.R "
+            f"--inputdir {matrixdir} "
+            f"--outputdir {outmatrix} "
+            f"--minumi {self.minumi} "
+            f"--force_cells {self.forcecells} "
+        )
+        print('Performing cell calling.')
+        subprocess.check_call(callcell_cmd, shell=True)
+
         ###calculate saturation
         count_saturation(rnadir, self.threads)
-
-        ###Prepare barcode rank file for RNA knee plot
-        judgeFilexits(
-            f"{rnadir}/Solo.out/GeneFull_Ex50pAS/raw",
-            f"{rnadir}/Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv",
-            )
-        
-        import scanpy as sc
-        import pandas as pd
-
-        truecells = pd.read_csv(f"{rnadir}/Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv", header=None)[0].tolist()
-        adata = sc.read_10x_mtx(
-            f"{rnadir}/Solo.out/GeneFull_Ex50pAS/raw",
-            var_names='gene_symbols',
-            cache=False
-        )
-        umi_counts = pd.DataFrame({
-            'barcode': adata.obs_names,
-            'UMI': adata.X.sum(axis=1).A1  # 转换为numpy数组
-        })
-        umi_counts['is_cell_barcode'] = umi_counts['barcode'].isin(truecells).astype(int)
-        umi_counts = umi_counts.sort_values('UMI', ascending=False)
-        umi_counts['rank'] = range(1, len(umi_counts)+1)
-        umi_counts.to_csv(os.path.join(rnadir, 'cell_rna_umi.rank.txt'), sep='\t', index=False)
-
-        (Path(self.outdir) / ".count.done").touch()
 
 
 def count_app(
@@ -157,13 +145,9 @@ def count_app(
     mapparams: Annotated[Optional[str], typer.Option("--mapparams", "-mp", help="Additional STAR mapping parameters (required for 'other' chemistry)")] = None,
     threads: Annotated[int, typer.Option("--threads", "-t", help="Number of threads")] = 4,
     calling_method: Annotated[str, typer.Option("--calling_method", help="Cell calling method: CellRanger2.2/EmptyDrops_CR")] = "EmptyDrops_CR",
-    velo: Annotated[bool, typer.Option("--velo", help="Enable STARsolo Velocyto mode (default: False)")] = False    
-    # ##暂未启用
-    # expectcells: Annotated[int, typer.Option("--expectcells", 
-    #                                      help="Expected number of recovered beads, used as input to cell calling algorithm ")] = 30000,
-    # forcecells: Annotated[int, typer.Option("--forcecells", 
-    #                                      help="Force pipeline to use this number of beads, bypassing cell calling algorithm.")] = None,
-    # minumi: Annotated[int, typer.Option("--minumi", help="The min umi for use emptydrops")] = 1000,
+    forcecells: Annotated[int, typer.Option("--forcecells", help="Force pipeline to use this number of beads, bypassing cell calling algorithm.")] = 0,
+    minumi: Annotated[int, typer.Option("--minumi", help="The min umi for use emptydrops")] = 200,
+    velo: Annotated[bool, typer.Option("--velo", help="Enable STARsolo Velocyto mode (default: False)")] = False
 ):
     """
     Run RNA mapping and counting pipeline.\n

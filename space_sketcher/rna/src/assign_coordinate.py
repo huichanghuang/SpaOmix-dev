@@ -6,6 +6,10 @@ from space_sketcher.tools.utils import csv2dict
 """
 This function assign coordinate to each spatial barcode 
 """
+# 反向互补函数
+comp_tab = str.maketrans('ATCG', 'TAGC')
+def reverse_complement(seq):
+    return seq.translate(comp_tab)[::-1]
 
 def readlines(_file):
     lines = set()
@@ -31,9 +35,11 @@ def assign_coordinate(coordfile, oligochip, sb_umis, true_cbs, summaryfile, sbwl
     
     if oligochip == "LD":
         ###spatial barcode截取, 为了匹配puckfile中的barcode
-        truecell_umis["SUB_SB"] = df_umis["Spatial_Barcode"].str[:10]+df_umis["Spatial_Barcode"].str[12:18]
+        truecell_umis["SUB_SB"] = truecell_umis["Spatial_Barcode"].str[:10]+truecell_umis["Spatial_Barcode"].str[12:18]
+    elif oligochip == "GM":
+        truecell_umis["SUB_SB"] = truecell_umis['Spatial_Barcode'].apply(reverse_complement)
     else:
-        truecell_umis["SUB_SB"] = df_umis["Spatial_Barcode"]
+        truecell_umis["SUB_SB"] = truecell_umis["Spatial_Barcode"]
 
     ###summary statistic
     summary = csv2dict(summaryfile)
