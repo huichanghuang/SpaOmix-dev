@@ -258,13 +258,6 @@ def distribution_violin(clusterfile, samplename):
         gridcolor='whitesmoke')    
     return fig
 
-from bokeh.io import output_file, show
-from bokeh.models import ColumnDataSource, Slider, HoverTool
-from bokeh.plotting import figure
-from bokeh.layouts import column
-import pandas as pd
-import numpy as np
-
 def _umap_theme(fig):
     """
     白色背景
@@ -294,17 +287,17 @@ def _umap_theme(fig):
     return fig
 
 
-def check_layout(clusterdf, fig, _type="LD"):
+def check_layout(clusterdf, fig, oligochip="LD"):
     """
-    调整绘图布局，根据类型设置坐标轴范围和刻度
+    调整绘图布局，根据芯片类型设置坐标轴范围和刻度
     参数:
     clusterdf - 包含坐标数据的DataFrame
     fig - 要调整的图形对象
-    _type - 类型，可选"LD"或"GM"或"UMAP"
+    oligochip - 芯片类型，可选"LD"或"GM"
     返回:
     调整后的图形对象
     """
-    if _type == "LD":
+    if oligochip == "LD":
         ###x, y 轴范围
         fig.update_layout(
             autosize=True,
@@ -321,7 +314,7 @@ def check_layout(clusterdf, fig, _type="LD"):
                 constrain="domain",  # 限制轴范围
                 range=[0, 9399]))
                 
-    elif _type == "GM":
+    elif oligochip == "GM":
         ymax = max(clusterdf['ycoord'])
         ymin = min(clusterdf['ycoord'])
         xmax = max(clusterdf['xcoord'])
@@ -356,173 +349,33 @@ def check_layout(clusterdf, fig, _type="LD"):
                 scaleratio=1,
                 constrain="domain",
                 range=yaxis_range))
-    elif _type == "UMAP":
-        ymax = max(clusterdf['UMAP2'])
-        ymin = min(clusterdf['UMAP2'])
-        xmax = max(clusterdf['UMAP1'])
-        xmin = min(clusterdf['UMAP1'])        
-        # 计算最大范围并加10作为缓冲
-        max_range = max(ymax-ymin, xmax-xmin) + 2
-        center_x = (xmax + xmin) / 2
-        center_y = (ymax + ymin) / 2
-        # 设置轴范围以保持居中
-        xaxis_range = [center_x - max_range/2 - 2, center_x + max_range/2 + 2]
-        yaxis_range = [center_y - max_range/2 - 2, center_y + max_range/2 + 2]
-        # 生成5间隔的刻度值
-        start_x = round(xaxis_range[0] / 5) * 5
-        end_x = round(xaxis_range[1] / 5) * 5
-        x_tickvals = list(range(int(start_x), int(end_x)+5, 5))
-        start_y = round(yaxis_range[0] / 5) * 5
-        end_y = round(yaxis_range[1] / 5) * 5
-        y_tickvals = list(range(int(start_y), int(end_y)+5, 5))
-        
-        fig.update_layout(
-            autosize=True,
-            plot_bgcolor='white',
-            xaxis_tickvals=x_tickvals,
-            yaxis_tickvals=y_tickvals,
-            yaxis_title=None, 
-            xaxis_title=None,
-            xaxis=dict(
-                range=xaxis_range,
-                constrain="domain"),
-            yaxis=dict(
-                scaleanchor="x",
-                scaleratio=1,
-                constrain="domain",
-                range=yaxis_range))        
-
+                
     else:
         print("Not an available oligochip! Only LD or GM can be chosen")  
 
     return fig
 
-def _add_slider(fig, default_size=3.0):
-    # 添加滑动条调整点的大小
-    steps = [
-        {
-            "args": [{"marker.size": [round(size, 1)]}],
-            "label": "" if i % 5 != 0 else f"{size:.1f}",  # 每5步显示一个标签
-            "method": "restyle"
-        }
-        for i, size in enumerate(np.arange(1.0, 6.1, 0.1))  # 1.0到6.0，步长0.1
-    ]
+def _add_slider(fig, default_size=3):
+    fig.update_layout(
+        sliders=[
+            {
+                "active": default_size - 1,  # 默认选择 3
+                "currentvalue": {"prefix": "Point Size: "},
+                "steps": [
+                    {"args": [{"marker.size": [size]}], "label": str(size), "method": "restyle"}
+                    for size in range(1, 7)  # 1 到 6
+                ],
+                "x": 0.25,  # 滑动条位置（左对齐）
+                "len": 0.5,  # 滑动条长度
+                "xanchor": "left",
+                "yanchor": "top",
+                "y": 1.15,  # 滑动条位置（顶部）
+                "pad": {"t": 10},
+            }
+        ]
+    )
+    return fig
     
-    fig.update_layout(
-        autosize=True,
-        margin={"l": 50, "r": 50, "t": 80, "b": 50},
-        sliders=[
-            {
-                "active": int((default_size - 1.0) * 10),  # 计算默认位置
-                "currentvalue": {
-                    "prefix": "Point Size: ",
-                    "font": {"size": 12},
-                    "xanchor": "left",
-                    "offset": 20
-                },
-                "steps": steps,
-                "x": 0,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 20},
-                "transition": {"duration": 0},
-            }
-        ]
-    )
-    return fig
-
-def _add_combined_sliders(fig, clusterdf, default_size=3.0, x_col="xcoord", y_col="ycoord"):
-    import numpy as np
-
-    # --- 获取原始 trace 信息 ---
-    trace = fig.data[0]
-
-    x_orig = np.array(clusterdf[x_col])
-    y_orig = np.array(clusterdf[y_col])
-    center_x = np.mean(x_orig)
-    center_y = np.mean(y_orig)
-
-    color = trace.marker.color if hasattr(trace.marker, "color") else None
-    size = trace.marker.size if hasattr(trace.marker, "size") else default_size
-    hovertemplate = trace.hovertemplate if hasattr(trace, "hovertemplate") else None
-    customdata = trace.customdata if hasattr(trace, "customdata") else None
-    mode = trace.mode if hasattr(trace, "mode") else "markers"
-
-    # --- 点大小滑动条 ---
-    size_steps = [
-        {
-            "args": [{"marker.size": [round(s, 1)]}],
-            "label": "" if i % 5 != 0 else f"{s:.1f}",
-            "method": "restyle"
-        }
-        for i, s in enumerate(np.arange(1.0, 6.1, 0.1))
-    ]
-
-    # --- 旋转滑动条 ---
-    rotation_steps = []
-    for angle in range(0, 360, 15):
-        theta = np.radians(angle)
-        x_rot = (x_orig - center_x) * np.cos(theta) - (y_orig - center_y) * np.sin(theta) + center_x
-        y_rot = (x_orig - center_x) * np.sin(theta) + (y_orig - center_y) * np.cos(theta) + center_y
-
-        update_args = {
-            "x": [x_rot.tolist()],
-            "y": [y_rot.tolist()],
-            "mode": [mode],
-            "marker": {
-                "color": color,
-                "size": size,
-            },
-        }
-
-        if hovertemplate is not None:
-            update_args["hovertemplate"] = [hovertemplate]
-        if customdata is not None:
-            update_args["customdata"] = [customdata]
-
-        rotation_steps.append({
-            "args": [update_args],
-            "label": f"{angle}°",
-            "method": "update"
-        })
-
-    # --- 3. 合并布局 ---
-    fig.update_layout(
-        autosize=True,
-        margin={"l": 50, "r": 50, "t": 80, "b": 150},  # 底部留更多空间
-        sliders=[
-            # 点大小滑动条
-            {
-                "active": int((default_size - 1.0) * 10),
-                "currentvalue": {"prefix": "Point Size: ", "xanchor": "left", "offset": 20},
-                "steps": size_steps,
-                "x": 0,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 20},
-                "transition": {"duration": 0},
-            },
-            # 旋转滑动条
-            {
-                "active": 0,
-                "currentvalue": {"prefix": "Rotation: ", "suffix": "°", "xanchor": "left", "offset": 20},
-                "steps": rotation_steps,
-                "x": 0.55,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 10},
-                "transition": {"duration": 50}
-            }
-        ]
-    )
-    return fig
-
 def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
 
     clusterdf = pd.read_csv(_infile, header=0, sep="\t")
@@ -552,9 +405,8 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
             ),
         )
         fig1.update_traces(marker_size=3)
+        fig1 = _add_slider(fig1, default_size=3)  # 添加滑动条
         fig1 = check_layout(clusterdf, fig1, oligochip)
-        # fig1 = _add_combined_sliders(fig1, clusterdf, color_col="Cluster")  # 传递颜色列名
-        fig1 = _add_combined_sliders(fig1, clusterdf)
         
         fig2 = _umap_theme(
             px.scatter(
@@ -566,6 +418,8 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
                 color_discrete_sequence=color_map,
             )
         )
+        fig2.update_traces(marker_size=3)
+        fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
         fig2.update_layout(
             title=dict(text="UMAP Projection of Cells Colored by Cluster", font=dict(size=15), x=0.5, y=0.95),
             legend=dict(
@@ -573,9 +427,6 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
                 borderwidth=0,
             ),
         )
-        fig2.update_traces(marker_size=3)
-        fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
-        fig2 = check_layout(clusterdf, fig2, "UMAP")
     elif _type == "UMI":
         fig1 = _umap_theme(px.scatter(clusterdf, 
                                       x="xcoord", 
@@ -590,9 +441,9 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
             ),
         )
         fig1.update_traces(marker_size=3)
+        fig1 = _add_slider(fig1, default_size=3)  # 添加滑动条
+        ###x, y 轴范围
         fig1 = check_layout(clusterdf, fig1, oligochip)
-        # fig1 = _add_combined_sliders(fig1, clusterdf, default_size=3)
-        fig1 = _add_combined_sliders(fig1, clusterdf)
         
         fig2 = _umap_theme(
             px.scatter(
@@ -602,21 +453,20 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
                 color="log_nUMI",
             )
         )
-
+        fig2.update_traces(marker_size=3)
+        fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
         fig2.update_layout(
             title=dict(text="UMAP Projection of Cells Colored by log(UMI counts)", font=dict(size=15), x=0.5, y=0.95),
             legend=dict(
                 title="",
                 borderwidth=0,
             ),
-        )
-        fig2.update_traces(marker_size=3)
-        fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
-        fig2 = check_layout(clusterdf, fig2, "UMAP")
+        )        
     else:
         print("Please input the correct type: UMI or Cluster")
 
     return fig1, fig2
+
 
 def plot_sb_cb_umi_knee(_sb_umi_file, _cb_umi_file):
 
@@ -651,3 +501,373 @@ def plot_sb_cb_umi_knee(_sb_umi_file, _cb_umi_file):
     plot2.update_yaxes(mirror=True,ticks='outside',showline=True,linecolor='black', gridcolor='whitesmoke')
     
     return plot1, plot2
+
+
+my36colors = ['#E5D2DD', '#53A85F', '#F1BB72', '#F3B1A0', '#D6E7A3', '#57C3F3', 
+                '#476D87', '#E95C59', '#E59CC4', '#AB3282', '#23452F', '#BD956A', 
+                '#8C549C', '#585658', '#9FA3A8', '#E0D4CA', '#5F3D69', '#C5DEBA', 
+                '#58A4C3', '#E4C755', '#F7F398', '#AA9A59', '#E63863', '#E39A35', 
+                '#C1E6F3', '#6778AE', '#91D0BE', '#B53E2B', '#712820', '#DCC1DD', 
+                '#CCE0F5', '#CCC9E6', '#625D9E', '#68A180', '#3A6963', '#968175']
+
+
+
+from bokeh.plotting import figure
+from bokeh.layouts import row, column  # 确保导入row和column
+from bokeh.embed import file_html, components
+from bokeh.resources import CDN
+from bokeh.models import (ColumnDataSource, Slider, HoverTool, 
+                         CustomJS, LinearColorMapper, ColorBar,Legend)
+from bokeh.palettes import Viridis256
+import numpy as np
+import pandas as pd
+
+class BokehFigure:
+    def __init__(self):
+        self.plot = None
+        self.layout = None
+        
+    def to_html(self):
+        """返回可嵌入的HTML字符串"""
+        return file_html(self.layout, CDN, "Spatial Scatter")
+    
+    def to_components(self):
+        """返回(script, div)元组"""
+        return components(self.layout)
+
+
+def prepare_legend(clusterdf, color_map, source, fig, xaxis, yaxis):
+    # 创建分类图例项
+    legend_items = []
+    for cluster in sorted(clusterdf["Cluster"].unique()):
+        cluster = str(cluster)  # 确保cluster是字符串
+        subset = ColumnDataSource({
+            xaxis: source.data[xaxis][np.array(source.data['cluster']) == cluster],
+            yaxis: source.data[yaxis][np.array(source.data['cluster']) == cluster]
+        })
+        r = fig.scatter(
+            x=xaxis, y=yaxis, 
+            size=3,
+            fill_color=color_map[cluster],
+            line_color=None,
+            fill_alpha=0.7,
+            source=subset,
+            name=str(cluster)  # 确保名称是字符串
+        )
+        legend_items.append((str(cluster), [r]))  # 确保图例标签是字符串
+    
+    # 添加外部图例
+    legend = Legend(
+        items=legend_items,
+        location="center_right",
+        title="Clusters",
+        label_text_font_size="10px",
+        glyph_height=15,
+        glyph_width=15,
+        spacing=5,
+        label_standoff=8,
+        margin=10
+    )
+    return legend, legend_items
+
+def prepare_axis_range(clusterdf, _type="LD"):
+
+    if _type == "LD":
+        xaxis_range = (0, 9399)
+        yaxis_range = (0,9399)
+    elif _type == "GM":
+        ymax = max(clusterdf['ycoord'])
+        ymin = min(clusterdf['ycoord'])
+        xmax = max(clusterdf['xcoord'])
+        xmin = min(clusterdf['xcoord'])        
+        # 计算最大范围并加10作为缓冲
+        max_range = max(ymax-ymin, xmax-xmin) + 10
+        center_x = (xmax + xmin) / 2
+        center_y = (ymax + ymin) / 2
+        # 设置轴范围以保持居中
+        xaxis_range = (center_x - max_range/2 -100, center_x + max_range/2 + 100)
+        yaxis_range = [center_y - max_range/2 -100, center_y + max_range/2 + 100]
+    elif _type == "UMAP":
+        ymax = max(clusterdf['UMAP2'])
+        ymin = min(clusterdf['UMAP2'])
+        xmax = max(clusterdf['UMAP1'])
+        xmin = min(clusterdf['UMAP1'])        
+        # 计算最大范围并加10作为缓冲
+        max_range = max(ymax-ymin, xmax-xmin) + 2
+        center_x = (xmax + xmin) / 2
+        center_y = (ymax + ymin) / 2
+        # 设置轴范围以保持居中
+        xaxis_range = [center_x - max_range/2 - 2, center_x + max_range/2 + 2]
+        yaxis_range = [center_y - max_range/2 - 2, center_y + max_range/2 + 2]
+    else:
+        print("Not an available oligochip! Only LD or GM can be chosen")  
+
+    return xaxis_range, yaxis_range
+
+CLUSTER_ROTATE_CODE = """
+        const data = source.data;
+        const ox = data['original_x'];
+        const oy = data['original_y'];
+        const center_x = ox.reduce((a,b) => a+b, 0) / ox.length;
+        const center_y = oy.reduce((a,b) => a+b, 0) / oy.length;
+        
+        const angle = rotate_slider.value * Math.PI / 180;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        // 更新所有渲染器
+        for (const r of renderers) {
+            const source = r.data_source;
+            const cluster = r.name;
+            const x = source.data['x'];
+            const y = source.data['y'];
+            const orig_x = data['original_x'].filter((_, idx) => data['cluster'][idx] === cluster);
+            const orig_y = data['original_y'].filter((_, idx) => data['cluster'][idx] === cluster);
+            
+            for (let i = 0; i < x.length; i++) {
+                const dx = orig_x[i] - center_x;
+                const dy = orig_y[i] - center_y;
+                x[i] = dx * cosA - dy * sinA + center_x;
+                y[i] = dx * sinA + dy * cosA + center_y;
+            }
+            
+            r.glyph.size = size_slider.value;
+        }
+        source.change.emit();
+        """
+
+UMI_RORATE_CODE = """
+    const data = source.data;
+    const ox = data['original_x'];
+    const oy = data['original_y'];
+    const center_x = ox.reduce((a,b) => a+b, 0) / ox.length;
+    const center_y = oy.reduce((a,b) => a+b, 0) / oy.length;
+
+    const angle = rotate_slider.value * Math.PI / 180;
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    for (let i = 0; i < data['x'].length; i++) {
+        const dx = ox[i] - center_x;
+        const dy = oy[i] - center_y;
+        data['x'][i] = dx * cosA - dy * sinA + center_x;
+        data['y'][i] = dx * sinA + dy * cosA + center_y;
+    }
+
+    renderer.glyph.size = size_slider.value;
+    source.change.emit();
+    """
+
+def create_dual_plots(_infile, _type = "UMI", oligochip="LD"):
+    # 准备数据源
+    clusterdf = pd.read_csv(_infile, header=0, sep="\t")
+    clusterdf["log_nUMI"] = np.log(clusterdf["nCount_Spatial"]+1)
+    clusterdf = clusterdf.sort_values(by="Cluster")
+    clusterdf["Pct"] = clusterdf["Cluster"].map(clusterdf["Cluster"].value_counts(normalize=True))
+    clusterdf["Cluster"] = clusterdf["Cluster"].astype("category")
+    ##sort the clusterdf by the Cluster column
+    clusterdf = clusterdf.sort_values(by="Cluster")
+    color_map = {str(cluster): my36colors[i % len(my36colors)] 
+                 for i, cluster in enumerate(clusterdf["Cluster"].unique())}
+
+    spatial_source = ColumnDataSource(data=dict(
+        x=clusterdf["xcoord"],
+        y=clusterdf["ycoord"],
+        cluster=clusterdf["Cluster"].astype(str),  # 确保cluster是字符串
+        pct=clusterdf["Pct"],
+        umap1=clusterdf["UMAP1"],
+        umap2=clusterdf["UMAP2"],
+        log_numi=clusterdf["log_nUMI"],
+        original_x=clusterdf["xcoord"].copy(),
+        original_y=clusterdf["ycoord"].copy(),
+        color=[color_map[str(c)] for c in clusterdf["Cluster"]]
+    ))
+    
+    l_xaxis_range, l_yaxis_range = prepare_axis_range(clusterdf, _type=oligochip)
+    r_xaxis_range, r_yaxis_range = prepare_axis_range(clusterdf, _type="UMAP")
+
+    if _type == "Cluster":
+    
+        # ========== 左图，Cluster空间分布，点调节大小+图案旋转 ==========
+        spatial_fig = figure(
+            width=550, height=500,
+            x_range=l_xaxis_range, 
+            y_range=l_yaxis_range,
+            x_axis_label="X",
+            y_axis_label="Y",
+            title="Spatial Coordinates (Colored by Cluster)",
+            tools="pan,wheel_zoom,box_zoom,reset",
+            toolbar_location="above"
+        )
+        
+        legend, legend_items = prepare_legend(clusterdf, color_map, spatial_source, spatial_fig, 'x', 'y')
+        spatial_fig.add_layout(legend, 'right')
+        
+        # 左图控制滑块
+        size_slider = Slider(start=1, end=7, value=3, step=0.5, title="Point Size")
+        rotate_slider = Slider(start=0, end=360, value=0, step=1, title="Rotation Angle")
+        
+        # 左图回调
+        spatial_callback = CustomJS(args={
+            'source': spatial_source,
+            'size_slider': size_slider,
+            'rotate_slider': rotate_slider,
+            'renderers': [r for (_, [r]) in legend_items]  # 获取所有渲染器
+        }, code=CLUSTER_ROTATE_CODE)
+
+        size_slider.js_on_change('value', spatial_callback)
+        rotate_slider.js_on_change('value', spatial_callback)
+        
+        # ========== 右图：UMAP坐标 + cluster颜色+点大小调节 ==========
+        umap_fig = figure(
+            width=550, height=500,
+            x_range=r_xaxis_range, 
+            y_range=r_yaxis_range,
+            x_axis_label="UMAP1",
+            y_axis_label="UMAP2",
+            title="UMAP Projection (Colored by Cluster)",
+            tools="pan,wheel_zoom,box_zoom,reset"
+        )
+        legend, legend_items = prepare_legend(clusterdf, color_map, spatial_source, umap_fig, 'umap1', 'umap2')
+        umap_fig.add_layout(legend, 'right')
+        
+        # 右图控制滑块
+        umap_size_slider = Slider(start=1, end=7, value=3, step=0.5, title="Point Size")
+        # 右图回调
+        umap_callback = CustomJS(args={
+            'legend_items': legend_items,  # 直接传递图例项
+            'slider': umap_size_slider
+        }, code="""
+        for (const item of legend_items) {
+            const [_, renderers] = item;
+            for (const r of renderers) {
+                r.glyph.size = slider.value;
+            }
+        }
+        """)
+        umap_size_slider.js_on_change('value', umap_callback)
+        
+        # ========== 组合图形 ==========
+        spatial_controls = column(size_slider, rotate_slider)
+        umap_controls = column(umap_size_slider)
+        
+        fig = BokehFigure()
+        fig.layout = row(
+            column(spatial_fig, spatial_controls),
+            column(umap_fig, umap_controls),
+            sizing_mode='fixed',
+            spacing=50,  # 两图之间添加50像素间距
+        )
+    elif _type == "UMI":
+        # ========== 右图：空间分布坐标 + log_nUMI颜色 ==========
+        umi_mapper = LinearColorMapper(
+            palette=Viridis256,
+            low=clusterdf["log_nUMI"].min(),
+            high=clusterdf["log_nUMI"].max()
+        )
+        spatial_fig = figure(
+            width=550, height=500,
+            x_range=l_xaxis_range, 
+            y_range=l_yaxis_range,
+            title="Spatial Coordinates (Colored by log UMI)",
+            tools="pan,wheel_zoom,box_zoom,reset",
+            toolbar_location="above"
+        )
+        # 绘制所有点（统一渲染器）
+        spatial_renderer = spatial_fig.scatter(
+            x='x', y='y', 
+            size=3,
+            fill_color={'field': 'log_numi', 'transform': umi_mapper},
+            line_color=None,
+            fill_alpha=0.7,
+            source=spatial_source
+        )
+        # 左图控制滑块
+        size_slider = Slider(start=1, end=7, value=3, step=0.5, title="Point Size")
+        rotate_slider = Slider(start=0, end=360, value=0, step=1, title="Rotation Angle")
+        
+        # 左图回调（旋转+大小）
+        spatial_callback = CustomJS(args={
+            'source': spatial_source,
+            'size_slider': size_slider,
+            'rotate_slider': rotate_slider,
+            'renderer': spatial_renderer
+        }, code=UMI_RORATE_CODE)
+        size_slider.js_on_change('value', spatial_callback)
+        rotate_slider.js_on_change('value', spatial_callback)        
+        # 添加颜色条
+        color_bar = ColorBar(
+            color_mapper=umi_mapper,
+            label_standoff=12,
+            location=(0,0),
+            title="log(UMI)"
+        )
+        spatial_fig.add_layout(color_bar, 'right')        
+        
+        # ========== 右图：UMAP坐标 + log_nUMI颜色 ==========      
+        umap_fig = figure(
+            width=550, height=500,
+            x_range=r_xaxis_range, 
+            y_range=r_yaxis_range,
+            title="UMAP Projection (Colored by log_nUMI)",
+            tools="pan,wheel_zoom,box_zoom,reset",
+            toolbar_location="above"
+        )
+        
+        umap_renderer = umap_fig.scatter(
+            x='umap1', y='umap2', size=3,
+            fill_color={'field': 'log_numi', 'transform': umi_mapper},
+            line_color=None,
+            fill_alpha=0.7,
+            source=spatial_source
+        )
+        
+        umap_fig.add_layout(color_bar, 'right')
+        
+        # 右图控制滑块
+        umap_size_slider = Slider(start=3, end=20, value=8, step=0.5, title="Point Size")
+        umap_callback = CustomJS(args={'renderer': umap_renderer, 'slider': umap_size_slider}, 
+                            code="renderer.glyph.size = slider.value;")
+        umap_size_slider.js_on_change('value', umap_callback)
+
+        # ========== 组合图形 ==========
+        spatial_controls = column(size_slider, rotate_slider)
+        umap_controls = column(umap_size_slider)
+        
+        fig = BokehFigure()
+        fig.layout = row(
+            column(spatial_fig, spatial_controls),
+            column(umap_fig, umap_controls),
+            sizing_mode='fixed',
+            spacing=50,  # 两图之间添加50像素间距
+        )
+    else:
+        print("Please input the correct type: UMI or Cluster")
+    
+    return fig
+
+
+# 使用示例
+if __name__ == "__main__":
+    # 模拟数据
+    clusterdf = pd.DataFrame({
+        "xcoord": np.random.rand(100) * 8000,
+        "ycoord": np.random.rand(100) * 8000,
+        "Cluster": np.random.choice(["A","B","C","D"], 100),
+        "Pct": np.random.rand(100),
+        "log_nUMI": np.log(np.random.randint(1, 1000, 100))
+    })
+    
+    infile = "/data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/test/0530-0523-N24-03-C/03.analysis/UMAPpos.txt"
+    # 创建图形对象
+    fig = create_dual_plots(infile, "Cluster", "LD")
+    
+    # 获取HTML嵌入代码
+    html = fig.to_html()
+    with open("/data03/lead/userdata/huanghuichang/Work/Pipeline/Space-sketcher-dev/space_sketcher/rna/src/rotating_points_with_hover-cluster.html", "w") as f:
+        f.write(html)
+    
+    # 或者获取components单独嵌入
+    script, div = fig.to_components()
+    print(f"JavaScript代码长度: {len(script)} 字符")
+    print(f"Div元素: {div[:100]}...")

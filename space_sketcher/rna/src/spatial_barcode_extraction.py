@@ -9,6 +9,7 @@ from typing import Tuple, Dict, Set, List
 import polars as pl
 from space_sketcher.tools.utils import add_log
 from loguru import logger
+import subprocess
 
 CHUNK_SIZE = 5_000_000    # 每个chunk处理5M reads
 
@@ -243,7 +244,8 @@ def process_fastq_singlethread(
 
             if check_sb and sb_whitelist and sb not in sb_whitelist:
                 continue
-
+            if sb == "":
+                continue
             results.append(f"{cb},{umi},{sb},1")
           
     csv_text = "Cell_Barcode,UMI,Spatial_Barcode,Read_Count\n" + "\n".join(results)
@@ -329,8 +331,8 @@ def process_fastq_multithread(
             n = perfect_match_count = cbmatched = 0
             for reads in self._reader:
                 n += 1
-                if n % 10000 == 0 and progress is not None:
-                    progress.update(10000)
+                if n % CHUNK_SIZE == 0 and progress is not None:
+                    progress.update(CHUNK_SIZE)
                 r1, r2 = reads
                 cb_parts = [r1.sequence[start:start+length] for start, length in self.cb_positions]
                 cb = "_".join(cb_parts) if len(cb_parts) > 1 else cb_parts[0]
@@ -348,7 +350,7 @@ def process_fastq_multithread(
                 results.append(f"{cb},{umi},{sb},1\n")
                
             if progress is not None:
-                progress.update(n % 10000)
+                progress.update(n % CHUNK_SIZE)
             infiles.close()
             # cutadapt 未提供接口可以记录
             # 追加输出到文件中，每个进程一个文件
@@ -363,23 +365,9 @@ def process_fastq_multithread(
         pipeline = SimplePipeline()
         stats = runner.run(pipeline, Progress(every=1), outfiles=outfiles)
 
-    # import subprocess
-    final_path = f"{outdir}/spatial_umis.csv"
-
-    # 拼接内容文件（按顺序追加）
-    # subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
-    os.system(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}")
-
-    results = pl.read_csv(f"{outdir}/spatial_umis.csv",
-                          new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)
-    results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
-        pl.col("Read_Count").sum()
-    )
-    results.write_csv(final_path)
-    os.system(f"gzip {final_path}") ###压缩
-
     print(f"Total reads processed: {stats.n:,}, Matched reads: {stats.total_bp[0]:,}, Perfect matches: {stats.total_bp[1]:,}")
-    return results,stats.n,stats.total_bp[0]
+    
+    return temp_dir,stats.n,stats.total_bp[0]
 
 
 def calculate_statistics(df: pd.DataFrame, total_reads: int, matched_reads: int) -> Dict[str, float]:
@@ -423,7 +411,7 @@ def stat_spatial_barcodes(r1fastq, r2fastq,
         spatial_umis_path = os.path.join(outdir, 'spatial_umis.csv')
         result_df.write_csv(spatial_umis_path)
     else:
-        result_df, total_reads, total_matched = process_fastq_multithread(
+        temp_dir, total_reads, total_matched = process_fastq_multithread(
             r1fastq, r2fastq, oligochip,
             cb_positions=cb_positions,
             umi_pos=umi_pos,
@@ -433,6 +421,22 @@ def stat_spatial_barcodes(r1fastq, r2fastq,
             outdir=outdir
         )
 
+        # import subprocess
+        final_path = f"{outdir}/spatial_umis.csv"
+        # 拼接内容文件（按顺序追加）
+        # subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
+        # os.system(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}")
+        subprocess.check_call(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True)
+        results = pl.read_csv(f"{outdir}/spatial_umis.csv",
+                            new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)
+        results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
+            pl.col("Read_Count").sum()
+        )
+        results.write_csv(final_path)
+        # os.system(f"gzip {final_path}") ###压缩
+        subprocess.check_call(f"gzip {final_path}", shell=True)
+
+    
     # 3. 计算并保存统计信息
     summary = calculate_statistics(result_df, total_reads, total_matched)
     outstat = os.path.join(outdir, "sb_library_summary.temp.csv")

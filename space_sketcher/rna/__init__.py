@@ -5,6 +5,8 @@ from .oligo import oligo_app
 from .analysis import analysis_app
 from .report import report_app
 from .mkref import mkref_app
+from .mkgtf import mkgtf_app
+
 
 app = typer.Typer(name="rna", help="Perform quality control, alignment, and filtering using spatial RNA and oligo library sequencing data.")
 
@@ -15,5 +17,6 @@ app.command("oligo")(oligo_app)
 app.command("analysis")(analysis_app)
 app.command("report")(report_app)
 app.command("mkref")(mkref_app)
+app.command("mkgtf")(mkgtf_app)
 
 __all__ = ["app"]

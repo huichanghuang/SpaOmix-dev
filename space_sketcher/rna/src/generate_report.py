@@ -701,7 +701,7 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
     def _to_html(fig):
         return fig.to_html(
             full_html=False,
-            default_height="450px",
+            default_height="550px",
             default_width="480px",
             include_plotlyjs=False,
         )

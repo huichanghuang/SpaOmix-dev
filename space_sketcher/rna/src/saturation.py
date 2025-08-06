@@ -47,12 +47,12 @@ def load_filter_barcodes(filterbarcodefile):
     if filterbarcodefile.endswith("gz"):
         with gzip.open(filterbarcodefile, 'r') as f:
             for line in f:
-                modifiedcb = "CB:Z:" + line.strip()
+                modifiedcb = "CB:Z:" + line.strip().decode('utf-8')
                 filterbarcodes.add(modifiedcb)    
     else:
         with open(filterbarcodefile, 'r') as f:
             for line in f:
-                modifiedcb = "CB:Z:" + line.strip()
+                modifiedcb = "CB:Z:" + line.strip().decode('utf-8')
                 filterbarcodes.add(modifiedcb)
     return filterbarcodes
 

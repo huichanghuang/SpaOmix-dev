@@ -258,13 +258,6 @@ def distribution_violin(clusterfile, samplename):
         gridcolor='whitesmoke')    
     return fig
 
-from bokeh.io import output_file, show
-from bokeh.models import ColumnDataSource, Slider, HoverTool
-from bokeh.plotting import figure
-from bokeh.layouts import column
-import pandas as pd
-import numpy as np
-
 def _umap_theme(fig):
     """
     白色背景

@@ -3,11 +3,13 @@ import gzip
 import argparse
 import pandas as pd
 from space_sketcher.tools.utils import csv2dict
+import copy
 """
 This function assign coordinate to each spatial barcode 
 """
 # 反向互补函数
 comp_tab = str.maketrans('ATCG', 'TAGC')
+
 def reverse_complement(seq):
     return seq.translate(comp_tab)[::-1]
 
@@ -31,8 +33,9 @@ def assign_coordinate(coordfile, oligochip, sb_umis, true_cbs, summaryfile, sbwl
     true_cells = readlines(true_cbs)    
     ###extract spatial barcode for those calling cell barcodes
     df_umis = pd.read_csv(f"{sb_umis}", compression="gzip")
+    df_umis = df_umis.dropna(subset=["Spatial_Barcode"])
     truecell_umis = df_umis[df_umis["Cell_Barcode"].isin(true_cells)]
-    
+   
     if oligochip == "LD":
         ###spatial barcode截取, 为了匹配puckfile中的barcode
         truecell_umis["SUB_SB"] = truecell_umis["Spatial_Barcode"].str[:10]+truecell_umis["Spatial_Barcode"].str[12:18]
