@@ -13,6 +13,7 @@ from space_sketcher.rna.src.plotly_to_report import (
     spatial_scatter,
 )
 
+
 def base64uri(filepath):
     """
     将文件转换为 base64 URI 格式   
@@ -669,8 +670,8 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
 
     ######Analysis 页面
     # 小提琴图
-    fig = distribution_violin(metadata, samplename=summary["Sample"])
-    content = fig.to_html(
+    vio_fig = distribution_violin(metadata, samplename=summary["Sample"])
+    content = vio_fig.to_html(
         full_html=False,
         default_height="450px",
         default_width="950px",
@@ -697,20 +698,21 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
     )
 
     #UMI distribution on UMAP and Spatial location
-    umi_fig1, umi_fig2 = spatial_scatter(metadata, "UMI", oligochip)
-    def _to_html(fig):
-        return fig.to_html(
-            full_html=False,
-            default_height="550px",
-            default_width="480px",
-            include_plotlyjs=False,
-        )
+    umi_fig = spatial_scatter(metadata, "UMI", oligochip)
+    content = umi_fig.bokeh_to_html()
+    # def _to_html(fig):
+    #     return fig.to_html(
+    #         full_html=False,
+    #         default_height="550px",
+    #         default_width="480px",
+    #         include_plotlyjs=False,
+    #     )
 
-    content = (
-        f'<div class="row"><div class = "col-6">{_to_html(umi_fig1)}'
-        f'</div><div class = "col-6">'
-        f"{_to_html(umi_fig2)}</div></div>"
-    )
+    # content = (
+    #     f'<div class="row"><div class = "col-6">{_to_html(umi_fig1)}'
+    #     f'</div><div class = "col-6">'
+    #     f"{_to_html(umi_fig2)}</div></div>"
+    # )
     umi_str = report_card(
         title="UMI Counts",
         help_msg=[
@@ -724,17 +726,25 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
                 "value": "This plot shows the log2(UMI counts) for each spot barcode. Each dot associated with a spot barcode and is colored by the log2 value of UMI counts. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
             },
         ],
-        content=content,
+        # content=content,
+        content=f'<div class="d-flex justify-content-end">{content}</div>',
         style="width: 1000px",
     )
 
     #Cluster distribution on UMAP and Spatial location
-    cluster_fig1, cluster_fig2 = spatial_scatter(metadata, "Cluster", oligochip)
-    content = (
-        f'<div class="row"><div class = "col-6">{_to_html(cluster_fig1)}'
-        f'</div><div class = "col-6">'
-        f"{_to_html(cluster_fig2)}</div></div>"
-    )
+    cluster_fig = spatial_scatter(metadata, "Cluster", oligochip)
+    content = cluster_fig.bokeh_to_html()
+    # content = cluster_fig.to_html(
+    #     full_html=False,
+    #     default_height="450px",
+    #     default_width="1000px",
+    #     include_plotlyjs=False,
+    # )
+    # content = (
+    #     f'<div class="row"><div class = "col-6">{_to_html(cluster_fig1)}'
+    #     f'</div><div class = "col-6">'
+    #     f"{_to_html(cluster_fig2)}</div></div>"
+    # )
     cluster_str = report_card(
         title="Cluster",
         help_msg=[
@@ -748,7 +758,8 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
                 "value": "This plot shows the automated clustering result for each cell-barcode by UMAP algorithm. Each dot associated with a cell barcode and is colored according to different cluster. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
             },
         ],
-        content=content,
+        # content=content,
+        content=f'<div class="d-flex justify-content-end">{content}</div>',
         style="width: 1000px",
     )
 

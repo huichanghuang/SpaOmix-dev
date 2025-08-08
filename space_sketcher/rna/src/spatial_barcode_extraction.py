@@ -370,6 +370,15 @@ def process_fastq_multithread(
     return temp_dir,stats.n,stats.total_bp[0]
 
 
+def safe_merge_files(temp_dir, final_path):
+    import shutil
+    from pathlib import Path
+    with open(final_path, 'wb') as f_out:
+        for temp_file in Path(temp_dir).glob('barcodes_*.txt'):
+            with open(temp_file, 'rb') as f_in:
+                shutil.copyfileobj(f_in, f_out)  # 使用缓冲的块复制
+    shutil.rmtree(temp_dir)
+
 def calculate_statistics(df: pd.DataFrame, total_reads: int, matched_reads: int) -> Dict[str, float]:
 
     valid_reads = df["Read_Count"].sum()
@@ -426,8 +435,9 @@ def stat_spatial_barcodes(r1fastq, r2fastq,
         # 拼接内容文件（按顺序追加）
         # subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
         # os.system(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}")
-        subprocess.check_call(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True)
-        results = pl.read_csv(f"{outdir}/spatial_umis.csv",
+        # subprocess.check_call(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True)
+        safe_merge_files(temp_dir, final_path)
+        results = pl.read_csv(final_path,
                             new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)
         results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
             pl.col("Read_Count").sum()
