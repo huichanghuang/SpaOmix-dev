@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing_extensions import Annotated
 import typer
+from loguru import logger
 
 class Analysis:
     def __init__(self,args):
@@ -24,30 +25,47 @@ class Analysis:
         anadir = os.path.join(self.outdir, "03.analysis")
         str_mkdir(anadir)
 
-        ###Extract spatial barcodes
+        ###perform_matrix_qc
         # judge file exits
         matrixdir = os.path.join(self.outdir, "02.oligo/filtered_matrix")
         judgeFilexits(matrixdir)
-        # # run perform_matrix_qc by R seurat
-        # matrix_cmd = (
-        #     f"{__root_dir__}/software/Rscript {__root_dir__}/rna/src/matrix_QC.R "
-        #     f"--matrixdir {matrixdir} "
-        #     f"--outdir {anadir} "
-        #     f"--mincells {self.mincells} "
-        #     f"--minfeatures {self.minfeatures} "
-        #     f"--nvariables {self.nvariables} "
-        #     f"--ndims {self.ndims} "
-        #     f"--resolution {self.resolution} "
-        # )
-        # print(f'\n{get_formatted_time()}\n'
-        #     f'Performing matrix QC.')
-        # subprocess.check_call(matrix_cmd, shell=True)
-        # run perform_matrix_qc
-        perform_matrix_qc(matrixdir, anadir, self.minfeatures, 
-                        self.mincells, self.nvariables,
-                        self.ndims, self.resolution)
+        ###检查过滤后的细胞数是否大于50
+        barcodefile = os.path.join(self.outdir, "02.oligo/filtered_matrix/barcodes.tsv.gz")
+        # 读取barcode文件获取细胞数量
+        cell_count = 0
+        try:
+            # 如果是gzip压缩文件
+            import gzip
+            with gzip.open(barcodefile, 'rt') as f:
+                cell_count = sum(1 for _ in f)
+        except:
+            # 如果不是压缩文件或读取失败，尝试普通方式读取
+            try:
+                with open(barcodefile, 'r') as f:
+                    cell_count = sum(1 for _ in f)
+            except Exception as e:
+                logger.error(f"Failed to read barcode file: {e}")
+                cell_count = 0
 
-        (Path(self.outdir) / ".analysis.done").touch()
+        logger.info(f"Filtered cell count: {cell_count}")
+        # 判断细胞数是否大于50，否则不运行matrix分析
+        if cell_count > 50:
+            logger.info("Processing matrix QC...")
+            perform_matrix_qc(matrixdir, anadir, self.minfeatures, 
+                            self.mincells, self.nvariables,
+                            self.ndims, self.resolution)
+            
+            (Path(self.outdir) / ".analysis.done").touch()
+        else:
+            logger.warning(f"Filtered cell count ({cell_count}) is less than or equal to 50. Skipping matrix analysis.")
+            # 可以选择创建一个标记文件表示分析被跳过
+            (Path(self.outdir) / ".analysis.skipped").touch()
+        # logger.info("Processing matrix QC...")
+        # perform_matrix_qc(matrixdir, anadir, self.minfeatures, 
+        #                 self.mincells, self.nvariables,
+        #                 self.ndims, self.resolution)
+
+        # (Path(self.outdir) / ".analysis.done").touch()
 
 
 def analysis_app(

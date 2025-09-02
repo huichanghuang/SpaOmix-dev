@@ -10,9 +10,10 @@ import scanpy as sc
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.sparse import csr_matrix
-import scipy.io
+from scipy.io import mmwrite
 import random
 import matplotlib.colors as mcolors
+import gzip
 norm = mcolors.Normalize(vmin=0, vmax=3)
 
 
@@ -20,55 +21,48 @@ def read_data(infile):
     """Read input file and return DataFrame"""
     return pd.read_csv(infile, sep='\t')
 
-def write_10x_format(outdir, adata, gene_symbols=True):
-    """
-    输出10X Genomics标准格式（Seurat兼容）
+
+def write_10x_matrix(output_dir, adata):
+    """Write AnnData object to 10x Genomics format - 优化版本"""    
+    os.makedirs(output_dir, exist_ok=True)
     
-    参数:
-        outdir: 输出目录路径
-        adata: AnnData对象
-        gene_symbols: 是否使用基因符号作为feature名称
-    """
-    os.makedirs(outdir, exist_ok=True)
+    # 1. 直接写入压缩的矩阵文件（避免中间文件）
+    matrix_file = os.path.join(output_dir, 'matrix.mtx.gz')
+    with gzip.open(matrix_file, 'wb') as f:
+        # 使用内存缓冲避免磁盘IO
+        import io
+        buffer = io.BytesIO()
+        mmwrite(buffer, adata.X.T)
+        f.write(buffer.getvalue())
     
-    # 1. 写入barcodes.tsv
-    barcodes_path = os.path.join(outdir, "barcodes.tsv")
-    pd.DataFrame(adata.obs_names).to_csv(
-        barcodes_path, 
-        sep='\t', 
-        header=False, 
-        index=False
-    )
-    
-    # 2. 写入features.tsv
-    features_path = os.path.join(outdir, "genes.tsv")
-    if gene_symbols and 'gene_symbols' in adata.var.columns:
-        features_df = pd.DataFrame({
-            'gene_ids': adata.var.index,
-            'gene_symbols': adata.var['gene_symbols'],
-            'feature_type': 'Gene Expression'
-        })
+    # 2. 预准备特征数据（避免多次条件判断）
+    if 'gene_ids' in adata.var.columns and 'gene_symbols' in adata.var.columns:
+        gene_ids = adata.var['gene_ids'].values
+        gene_symbols = adata.var['gene_symbols'].values
+    elif 'gene_symbols' in adata.var.columns:
+        gene_ids = adata.var_names.values
+        gene_symbols = adata.var['gene_symbols'].values
+    elif 'gene_ids' in adata.var.columns:
+        gene_ids = adata.var['gene_ids'].values
+        gene_symbols = adata.var_names.values
     else:
-        features_df = pd.DataFrame({
-            'gene_ids': adata.var.index,
-            'gene_symbols': adata.var.index,  # 如果没有gene_symbols则用gene_id
-            'feature_type': 'Gene Expression'
-        })
-    features_df.to_csv(
-        features_path, 
-        sep='\t', 
-        header=False, 
-        index=False
-    )
+        gene_ids = adata.var_names.values
+        gene_symbols = adata.var_names.values
     
-    # 3. 写入matrix.mtx (稀疏矩阵格式)
-    matrix_path = os.path.join(outdir, "matrix.mtx")
-    scipy.io.mmwrite(
-        matrix_path,
-        csr_matrix(adata.X.T)  # 注意需要转置
-    )
+    # 3. 使用numpy数组直接构建特征数据（避免DataFrame创建开销）
+    features_file = os.path.join(output_dir, 'genes.tsv.gz')
+    with gzip.open(features_file, 'wt') as f:
+        for i in range(adata.n_vars):
+            f.write(f"{gene_ids[i]}\t{gene_symbols[i]}\tGene Expression\n")
     
-    print(f"10X format files saved to: {outdir}")
+    # 4. 直接写入barcodes（避免创建DataFrame）
+    barcodes_file = os.path.join(output_dir, 'barcodes.tsv.gz')
+    with gzip.open(barcodes_file, 'wt') as f:
+        for barcode in adata.obs_names:
+            f.write(f"{barcode}\n")
+
+
+
 
 def filter_by_umi(df, maxumi=5000, minumi=2):
     """Filter spatial barcodes by total UMI counts"""
@@ -282,8 +276,9 @@ def filter_matrix(matrixdir, coord_df, outdir):
         import shutil
         shutil.rmtree(outmtxdir)
         
-    write_10x_format(outmtxdir, filtered_adata)
-    coord_df.to_csv(os.path.join(outmtxdir, "spatial_location_information.txt"), sep='\t', index=False)
+    write_10x_matrix(outmtxdir, filtered_adata)
+    coord_df.to_csv(os.path.join(outmtxdir, "spatial_location_information.txt.gz"), sep='\t', index=False, 
+                    compression={'method': 'gzip', 'compresslevel': 1, 'mtime': 1})
 
     
 def generate_summary(cellreads, coord_df, cb_umi_mean_top100, cluster_stats, outdir):
@@ -294,23 +289,43 @@ def generate_summary(cellreads, coord_df, cb_umi_mean_top100, cluster_stats, out
     cell_barcodes = coord_df['cb'].tolist()
     truecellreads = cellreadsdata[cellreadsdata['CB'].isin(cell_barcodes)]
     
-    stats = {
-        'Cells with Certain Location': len(truecellreads),
-        'Unique Reads in Cells Mapped to Gene': truecellreads['featureU'].sum(),
-        'Fraction of Unique Reads in Cells': round(truecellreads['featureU'].sum()/cellreadsdata['featureU'].sum(), 4),
-        'Mean Reads per Cell': round(truecellreads['featureU'].mean(), 0),
-        'Median Reads per Cell': round(truecellreads['featureU'].median(), 0),
-        'UMIs in Cells': truecellreads['nUMIunique'].sum(),
-        'Fraction of UMIs in Cells': round(truecellreads['nUMIunique'].sum()/cellreadsdata['nUMIunique'].sum(), 4),
-        'Mean UMI per Cell': round(truecellreads['nUMIunique'].mean(), 0),
-        'Median UMI per Cell': round(truecellreads['nUMIunique'].median(), 0),
-        'Mean Gene per Cell': round(truecellreads['nGenesUnique'].mean(), 0),
-        'Median Gene per Cell': round(truecellreads['nGenesUnique'].median(), 0),
-        'Median top100 Spatial UMI Mean per Cell': round(cb_umi_mean_top100['umi_count_mean'].median(), 3),
-        'Mean top100 Spatial UMI Mean per Cell': round(cb_umi_mean_top100['umi_count_mean'].mean(), 3)
-    }
+    if len(cell_barcodes) != 0:
+        stats = {
+            'Cells with Certain Location': len(cell_barcodes),
+            'Unique Reads in Cells Mapped to Gene': truecellreads['featureU'].sum(),
+            'Fraction of Unique Reads in Cells': round(truecellreads['featureU'].sum()/cellreadsdata['featureU'].sum(), 4),
+            'Mean Reads per Cell': round(truecellreads['featureU'].mean(), 0),
+            'Median Reads per Cell': round(truecellreads['featureU'].median(), 0),
+            'UMIs in Cells': truecellreads['nUMIunique'].sum(),
+            'Fraction of UMIs in Cells': round(truecellreads['nUMIunique'].sum()/cellreadsdata['nUMIunique'].sum(), 4),
+            'Mean UMI per Cell': round(truecellreads['nUMIunique'].mean(), 0),
+            'Median UMI per Cell': round(truecellreads['nUMIunique'].median(), 0),
+            'Mean Gene per Cell': round(truecellreads['nGenesUnique'].mean(), 0),
+            'Median Gene per Cell': round(truecellreads['nGenesUnique'].median(), 0),
+            'Median top100 Spatial UMI Mean per Cell': round(cb_umi_mean_top100['umi_count_mean'].median(), 3),
+            'Mean top100 Spatial UMI Mean per Cell': round(cb_umi_mean_top100['umi_count_mean'].mean(), 3)
+        }
     
-    stats.update(dict(zip(cluster_stats['cluster_type'], cluster_stats['ratio'])))
+        stats.update(dict(zip(cluster_stats['cluster_type'], cluster_stats['ratio'])))
+    else:
+        stats = {
+            'Cells with Certain Location': 0,
+            'Unique Reads in Cells Mapped to Gene': 0,
+            'Fraction of Unique Reads in Cells': 0,
+            'Mean Reads per Cell': 0,
+            'Median Reads per Cell': 0,
+            'UMIs in Cells': 0,
+            'Fraction of UMIs in Cells': 0,
+            'Mean UMI per Cell': 0,
+            'Median UMI per Cell': 0,
+            'Mean Gene per Cell': 0,
+            'Median Gene per Cell': 0,
+            'Median top100 Spatial UMI Mean per Cell': 0,
+            'Mean top100 Spatial UMI Mean per Cell': 0,
+            'single-cluster': 0,
+            'multi-cluster': 0,
+            'no-cluster': 1.0
+        }
     
     with open(os.path.join(outdir, "dbscan_filtered_cells.summary.csv"), 'w') as f:
         for k, v in stats.items():

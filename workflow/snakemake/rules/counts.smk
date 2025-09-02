@@ -12,7 +12,7 @@ def _set_count_params(wildcards):
     """
     
     """
-    space_sketcher = "/data03/lead/userdata/huanghuichang/Software/miniconda3/envs/space-sketcker/bin/space-sketcher"
+    space_sketcher = "/data03/lead/userdata/huanghuichang/Software/miniconda3/bin/space-sketcher"
     sample = wildcards.sample
     outdir = config["outdir"]
     value = config["samples"][wildcards.sample]
@@ -20,8 +20,8 @@ def _set_count_params(wildcards):
     Oligo = config["samples"][wildcards.sample]["Oligo"].split(";")
     coord = config["samples"][wildcards.sample]["coord"]
     species = value.get("species",config["species"])
-    forcecells = value.get("forcecells",config["forcecells"])
-    minrnaumi = value.get("forcecells",config["minrnaumi"])
+    # forcecells = value.get("forcecells",config["forcecells"])
+    # minrnaumi = value.get("forcecells",config["minrnaumi"])
     genome_dir = get_references(species)
 
     ##可选参数
@@ -59,8 +59,8 @@ def _set_count_params(wildcards):
         f'--outdir {outdir} --name {sample} '
         f'--reference {species} '
         f'-t {threads} '
-        f'--minrnaumi {minrnaumi} '
-        f'--forcecells {forcecells} '
+        # f'--minrnaumi {minrnaumi} '
+        # f'--forcecells {forcecells} '
         f'{devpar} {nobampar} {velopar}'
     )
     return cmd

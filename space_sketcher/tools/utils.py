@@ -97,7 +97,7 @@ def change_path():
 # Construct bin path using os.path.join for better portability
 def bin_path():
     # return os.path.join(get_common_path_part(), '.venv/bin')  
-    return "/data03/lead/userdata/huanghuichang/Software/miniconda3/envs/space-sketcker/bin"
+    return "/data03/lead/userdata/huanghuichang/Software/miniconda3/bin/"
     
 def rm_temp(*args):
     """
@@ -131,107 +131,63 @@ def get_formatted_time():
     return formatted_time
 
 
-def execute_and_log(
+def start_print_cmd(
     command: Union[str, List[str]],  # 支持字符串或列表形式的命令
     name: str,                      # 日志标识（如模块名）
     log_dir: str,                   # 日志目录
-    shell: bool = True,             # 是否使用shell执行
-    log_level: str = "INFO"         # 日志级别（INFO/ERROR）
-) -> None:
-    """
-    执行命令并实时输出日志信息，同时记录到日志文件
-    
-    Args:
-        command: 要执行的命令
-        name:    日志名称（用于区分来源）
-        log_dir: 日志存储目录
-        shell:   是否使用shell模式执行
-        log_level: 日志级别（INFO/ERROR）
-    """
-    # 确保日志目录存在
-    os.makedirs(log_dir, exist_ok=True)
-    
-    # 设置日志（所有命令记录到同一文件）
-    log_file = os.path.join(log_dir, "command_execution.log")
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    
-    # 避免重复添加handler
-    if not logger.handlers:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        logger.addHandler(file_handler)
-        
-        # 添加控制台handler用于实时输出
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        logger.addHandler(console_handler)
-    
+    ): 
+    logger = logging.getLogger()
+    logger.info(command)
     # 判断命令是否需要执行
-    if not os.path.exists(os.path.join(log_dir, f".{name}.done")):
-        # 记录执行的命令
-        cmd_str = command if isinstance(command, str) else " ".join(command)
-        logger.info("[COMMAND] %s", cmd_str)
-        
+    if not os.path.exists(os.path.join(log_dir, f".{name}.done")) or not os.path.exists(os.path.join(log_dir, f".{name}.skipped")):
         # 执行命令并实时输出
         try:
-            # 使用subprocess.Popen实现实时输出
-            process = subprocess.Popen(
-                command,
-                shell=shell,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-                bufsize=1  # 行缓冲
-            )
-            
-            # 实时读取输出
-            with process:
-                for line in process.stdout :
-                    logger.info(line.rstrip())  # 实时输出到日志和控制台
-                    sys.stdout.flush()  # 确保立即输出
-            
-                for line in process.stderr:
-                    logger.info(line.rstrip())  # 实时输出错误信息
-                    sys.stderr.flush()
-                    
-                # 等待进程结束
-                return_code = process.wait()
-                if return_code != 0:
-                    raise subprocess.CalledProcessError(return_code, cmd_str)
-                
+            subprocess.check_call(command, shell=True)
         except subprocess.CalledProcessError as e:
             logger.error("[FAILED] Exit code: %d\nCommand: %s", 
-                        e.returncode, cmd_str)
+                        e.returncode, command)
             raise
         except Exception as e:
             logger.error("[UNEXPECTED ERROR] %s", str(e))
             raise
-            
-        # 创建完成标记文件
-        with open(os.path.join(log_dir, f".{name}.done"), 'w') as f:
-            f.write("done")
+        # # 创建完成标记文件
+        # with open(os.path.join(log_dir, f".{name}.done"), 'w') as f:
+        #     f.write("done")
     else:
-        logger.info(f".{name}.done already exists, skip running {name}")
+        logger.info(f".{name}.done or .{name}.skipped already exists, skip running {name}")
+
+
+# def setup_logging(name, log_dir):
+#     today = time.strftime('%Y%m%d', time.localtime(time.time()))
+#     logfile = f'{log_dir}/log/{today}.txt'
+#     logger = logging.getLogger(name)
+    
+#     if not logger.handlers:
+#         logger.setLevel(logging.INFO)
+#         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s \n%(message)s')
         
-class StdoutAdapter:
-    def __init__(self, handler):
-        self.handler = handler
+#         file_handler = logging.FileHandler(logfile, encoding="utf8")
+#         file_handler.setLevel(logging.DEBUG)
+#         file_handler.setFormatter(formatter)
+        
+#         console_handler = logging.StreamHandler(sys.stdout)
+#         console_handler.setLevel(logging.ERROR)
+#         console_handler.setFormatter(formatter)
+        
+#         logger.addHandler(file_handler)
+#         logger.addHandler(console_handler)
+    
+#     return logger
 
-    def write(self, message):
-        record = logging.LogRecord(
-            name='stdout',
-            level=logging.INFO,
-            pathname=None,
-            lineno=None,
-            msg=message.rstrip('\n'),
-            args=None,
-            exc_info=None
-        )
-        self.handler.emit(record)
+# def logging_call(popenargs, name, log_dir):
+#     logger = setup_logging(name, log_dir)
 
-    def flush(self):
-        self.handler.flush()
+#     try:
+#         output = subprocess.check_output(popenargs, shell=True, stderr=subprocess.STDOUT, universal_newlines=True)
+#         logger.info('%s', output)
+#     except subprocess.CalledProcessError as e:
+#         logger.error('Command failed with exit code %d', e.returncode)
+#         logger.error('%s', e.output)
 
 
 def judgeFilexits(*args):

@@ -258,400 +258,6 @@ def distribution_violin(clusterfile, samplename):
         gridcolor='whitesmoke')    
     return fig
 
-from bokeh.io import output_file, show
-from bokeh.models import ColumnDataSource, Slider, HoverTool
-from bokeh.plotting import figure
-from bokeh.layouts import column
-import pandas as pd
-import numpy as np
-
-def _umap_theme(fig):
-    """
-    白色背景
-    """
-    fig.update_layout(
-        xaxis=dict(
-            mirror=True,
-            gridcolor="whitesmoke",
-            color="black",
-            showline=True,
-            zeroline=True,
-            linewidth=1,
-            linecolor="black",
-            zerolinecolor="whitesmoke",
-        ),
-        yaxis=dict(
-            mirror=True,
-            gridcolor="whitesmoke",
-            linewidth=1,
-            color="black",
-            linecolor="black",
-            zerolinecolor="whitesmoke",
-        ),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="white",
-    )
-    return fig
-
-
-def check_layout(clusterdf, fig, _type="LD"):
-    """
-    调整绘图布局，根据类型设置坐标轴范围和刻度
-    参数:
-    clusterdf - 包含坐标数据的DataFrame
-    fig - 要调整的图形对象
-    _type - 类型，可选"LD"或"GM"或"UMAP"
-    返回:
-    调整后的图形对象
-    """
-    if _type == "LD":
-        ###x, y 轴范围
-        fig.update_layout(
-            autosize=True,
-            plot_bgcolor='white', ###set the background color
-            xaxis_tickvals=[0, 2000,4000,6000,8000],
-            yaxis_tickvals=[0, 2000,4000,6000,8000],
-            yaxis_title=None, xaxis_title=None,
-            xaxis=dict(
-                    range=[0, 9399],  # 根据实际数据范围调整
-                    constrain="domain"),  # 限制轴范围
-            yaxis=dict(
-                scaleanchor="x",  # y轴比例锚定到x轴
-                scaleratio=1,      # 比例1:1
-                constrain="domain",  # 限制轴范围
-                range=[0, 9399]))
-                
-    elif _type == "GM":
-        ymax = max(clusterdf['ycoord'])
-        ymin = min(clusterdf['ycoord'])
-        xmax = max(clusterdf['xcoord'])
-        xmin = min(clusterdf['xcoord'])        
-        # 计算最大范围并加10作为缓冲
-        max_range = max(ymax-ymin, xmax-xmin) + 10
-        center_x = (xmax + xmin) / 2
-        center_y = (ymax + ymin) / 2
-        # 设置轴范围以保持居中
-        xaxis_range = [center_x - max_range/2 -100, center_x + max_range/2 + 100]
-        yaxis_range = [center_y - max_range/2 -100, center_y + max_range/2 + 100]
-        # 生成2k间隔的刻度值
-        start_x = round(xaxis_range[0] / 2000) * 2000
-        end_x = round(xaxis_range[1] / 2000) * 2000
-        x_tickvals = list(range(int(start_x), int(end_x)+2000, 2000))
-        start_y = round(yaxis_range[0] / 2000) * 2000
-        end_y = round(yaxis_range[1] / 2000) * 2000
-        y_tickvals = list(range(int(start_y), int(end_y)+2000, 2000))
-        
-        fig.update_layout(
-            autosize=True,
-            plot_bgcolor='white',
-            xaxis_tickvals=x_tickvals,
-            yaxis_tickvals=y_tickvals,
-            yaxis_title=None, 
-            xaxis_title=None,
-            xaxis=dict(
-                range=xaxis_range,
-                constrain="domain"),
-            yaxis=dict(
-                scaleanchor="x",
-                scaleratio=1,
-                constrain="domain",
-                range=yaxis_range))
-    elif _type == "UMAP":
-        ymax = max(clusterdf['UMAP2'])
-        ymin = min(clusterdf['UMAP2'])
-        xmax = max(clusterdf['UMAP1'])
-        xmin = min(clusterdf['UMAP1'])        
-        # 计算最大范围并加10作为缓冲
-        max_range = max(ymax-ymin, xmax-xmin) + 2
-        center_x = (xmax + xmin) / 2
-        center_y = (ymax + ymin) / 2
-        # 设置轴范围以保持居中
-        xaxis_range = [center_x - max_range/2 - 2, center_x + max_range/2 + 2]
-        yaxis_range = [center_y - max_range/2 - 2, center_y + max_range/2 + 2]
-        # 生成5间隔的刻度值
-        start_x = round(xaxis_range[0] / 5) * 5
-        end_x = round(xaxis_range[1] / 5) * 5
-        x_tickvals = list(range(int(start_x), int(end_x)+5, 5))
-        start_y = round(yaxis_range[0] / 5) * 5
-        end_y = round(yaxis_range[1] / 5) * 5
-        y_tickvals = list(range(int(start_y), int(end_y)+5, 5))
-        
-        fig.update_layout(
-            autosize=True,
-            plot_bgcolor='white',
-            xaxis_tickvals=x_tickvals,
-            yaxis_tickvals=y_tickvals,
-            yaxis_title=None, 
-            xaxis_title=None,
-            xaxis=dict(
-                range=xaxis_range,
-                constrain="domain"),
-            yaxis=dict(
-                scaleanchor="x",
-                scaleratio=1,
-                constrain="domain",
-                range=yaxis_range))        
-
-    else:
-        print("Not an available oligochip! Only LD or GM can be chosen")  
-
-    return fig
-
-def _add_slider(fig, default_size=3.0):
-    # 添加滑动条调整点的大小
-    steps = [
-        {
-            "args": [{"marker.size": [round(size, 1)]}],
-            "label": "" if i % 5 != 0 else f"{size:.1f}",  # 每5步显示一个标签
-            "method": "restyle"
-        }
-        for i, size in enumerate(np.arange(1.0, 6.1, 0.1))  # 1.0到6.0，步长0.1
-    ]
-    
-    fig.update_layout(
-        autosize=True,
-        margin={"l": 50, "r": 50, "t": 80, "b": 50},
-        sliders=[
-            {
-                "active": int((default_size - 1.0) * 10),  # 计算默认位置
-                "currentvalue": {
-                    "prefix": "Point Size: ",
-                    "font": {"size": 12},
-                    "xanchor": "left",
-                    "offset": 20
-                },
-                "steps": steps,
-                "x": 0,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 20},
-                "transition": {"duration": 0},
-            }
-        ]
-    )
-    return fig
-
-def _add_combined_sliders(fig, clusterdf, default_size=3.0, x_col="xcoord", y_col="ycoord"):
-    import numpy as np
-
-    # --- 获取原始 trace 信息 ---
-    trace = fig.data[0]
-
-    x_orig = np.array(clusterdf[x_col])
-    y_orig = np.array(clusterdf[y_col])
-    center_x = np.mean(x_orig)
-    center_y = np.mean(y_orig)
-
-    color = trace.marker.color if hasattr(trace.marker, "color") else None
-    size = trace.marker.size if hasattr(trace.marker, "size") else default_size
-    hovertemplate = trace.hovertemplate if hasattr(trace, "hovertemplate") else None
-    customdata = trace.customdata if hasattr(trace, "customdata") else None
-    mode = trace.mode if hasattr(trace, "mode") else "markers"
-
-    # --- 点大小滑动条 ---
-    size_steps = [
-        {
-            "args": [{"marker.size": [round(s, 1)]}],
-            "label": "" if i % 5 != 0 else f"{s:.1f}",
-            "method": "restyle"
-        }
-        for i, s in enumerate(np.arange(1.0, 6.1, 0.1))
-    ]
-
-    # --- 旋转滑动条 ---
-    rotation_steps = []
-    for angle in range(0, 360, 15):
-        theta = np.radians(angle)
-        x_rot = (x_orig - center_x) * np.cos(theta) - (y_orig - center_y) * np.sin(theta) + center_x
-        y_rot = (x_orig - center_x) * np.sin(theta) + (y_orig - center_y) * np.cos(theta) + center_y
-
-        update_args = {
-            "x": [x_rot.tolist()],
-            "y": [y_rot.tolist()],
-            "mode": [mode],
-            "marker": {
-                "color": color,
-                "size": size,
-            },
-        }
-
-        if hovertemplate is not None:
-            update_args["hovertemplate"] = [hovertemplate]
-        if customdata is not None:
-            update_args["customdata"] = [customdata]
-
-        rotation_steps.append({
-            "args": [update_args],
-            "label": f"{angle}°",
-            "method": "update"
-        })
-
-    # --- 3. 合并布局 ---
-    fig.update_layout(
-        autosize=True,
-        margin={"l": 50, "r": 50, "t": 80, "b": 150},  # 底部留更多空间
-        sliders=[
-            # 点大小滑动条
-            {
-                "active": int((default_size - 1.0) * 10),
-                "currentvalue": {"prefix": "Point Size: ", "xanchor": "left", "offset": 20},
-                "steps": size_steps,
-                "x": 0,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 20},
-                "transition": {"duration": 0},
-            },
-            # 旋转滑动条
-            {
-                "active": 0,
-                "currentvalue": {"prefix": "Rotation: ", "suffix": "°", "xanchor": "left", "offset": 20},
-                "steps": rotation_steps,
-                "x": 0.55,
-                "len": 0.5,
-                "xanchor": "left",
-                "yanchor": "top",
-                "y": 0,
-                "pad": {"t": 50, "b": 10},
-                "transition": {"duration": 50}
-            }
-        ]
-    )
-    return fig
-
-# def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
-
-#     clusterdf = pd.read_csv(_infile, header=0, sep="\t")
-#     clusterdf["log_nUMI"] = np.log(clusterdf["nCount_Spatial"]+1)
-#     clusterdf = clusterdf.sort_values(by="Cluster")
-#     clusterdf["Pct"] = clusterdf["Cluster"].map(clusterdf["Cluster"].value_counts(normalize=True))
-#     clusterdf["Cluster"] = clusterdf["Cluster"].astype("category")
-#     ##sort the clusterdf by the Cluster column
-#     clusterdf = clusterdf.sort_values(by="Cluster")
-#     color_map = {}
-#     for i in range(len(clusterdf["Cluster"].unique())):
-#         color_map[clusterdf["Cluster"].unique()[i]] = my36colors[i]
-
-#     if _type == "Cluster":
-#         fig1 = _umap_theme(px.scatter(clusterdf, 
-#                                       x="xcoord", 
-#                                       y="ycoord", 
-#                                       color="Cluster",
-#                                       hover_data=["Pct"],
-#                                       color_discrete_sequence=color_map,
-#                                       ))    
-#         fig1.update_layout(
-#             title=dict(text="Cells Colored by Cluster", font=dict(size=15), x=0.5, y=0.95),
-#             legend=dict(
-#                 title="",
-#                 borderwidth=0,
-#             ),
-#         )
-#         fig1.update_traces(marker_size=3)
-#         fig1 = check_layout(clusterdf, fig1, oligochip)
-#         # fig1 = _add_combined_sliders(fig1, clusterdf, color_col="Cluster")  # 传递颜色列名
-#         fig1 = _add_combined_sliders(fig1, clusterdf)
-        
-#         fig2 = _umap_theme(
-#             px.scatter(
-#                 clusterdf,
-#                 x="UMAP1",
-#                 y="UMAP2",
-#                 color="Cluster",
-#                 hover_data=["Pct"],
-#                 color_discrete_sequence=color_map,
-#             )
-#         )
-#         fig2.update_layout(
-#             title=dict(text="UMAP Projection of Cells Colored by Cluster", font=dict(size=15), x=0.5, y=0.95),
-#             legend=dict(
-#                 title="",
-#                 borderwidth=0,
-#             ),
-#         )
-#         fig2.update_traces(marker_size=3)
-#         fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
-#         fig2 = check_layout(clusterdf, fig2, "UMAP")
-#     elif _type == "UMI":
-#         fig1 = _umap_theme(px.scatter(clusterdf, 
-#                                       x="xcoord", 
-#                                       y="ycoord", 
-#                                       color="log_nUMI",
-#                                       ))    
-#         fig1.update_layout(
-#             title=dict(text="Cells Colored by log(UMI counts)", font=dict(size=15), x=0.5, y=0.95),
-#             legend=dict(
-#                 title="",
-#                 borderwidth=0,
-#             ),
-#         )
-#         fig1.update_traces(marker_size=3)
-#         fig1 = check_layout(clusterdf, fig1, oligochip)
-#         # fig1 = _add_combined_sliders(fig1, clusterdf, default_size=3)
-#         fig1 = _add_combined_sliders(fig1, clusterdf)
-        
-#         fig2 = _umap_theme(
-#             px.scatter(
-#                 clusterdf,
-#                 x="UMAP1",
-#                 y="UMAP2",
-#                 color="log_nUMI",
-#             )
-#         )
-
-#         fig2.update_layout(
-#             title=dict(text="UMAP Projection of Cells Colored by log(UMI counts)", font=dict(size=15), x=0.5, y=0.95),
-#             legend=dict(
-#                 title="",
-#                 borderwidth=0,
-#             ),
-#         )
-#         fig2.update_traces(marker_size=3)
-#         fig2 = _add_slider(fig2, default_size=3)  # 添加滑动条
-#         fig2 = check_layout(clusterdf, fig2, "UMAP")
-#     else:
-#         print("Please input the correct type: UMI or Cluster")
-
-#     return fig1, fig2
-
-def plot_sb_cb_umi_knee(_sb_umi_file, _cb_umi_file):
-
-    sb_umi_df = pd.read_csv(_sb_umi_file, sep = "\t", header = 0)
-    # 创建 Log-Log 散点图
-    plot1 = px.line(sb_umi_df, x='rank', y='umi_count_sum', log_x=True, log_y=True, markers=True,
-                    title='Log-Log Plot of UMI Count Sum by SB',
-                    labels={'rank': 'Rank (log scale)', 'umi_count_sum': 'Sum of UMI Count (log scale)'})    
-    plot1.update_layout(
-        width=600, height=500,
-        plot_bgcolor='white', ###set the background color
-        yaxis_title=None, xaxis_title=None,
-        margin=dict(l=20, r=20, t=30, b=20))
-    ##update the axis style
-    plot1.update_xaxes(mirror=True,ticks='outside',showline=True,linecolor='black', gridcolor='whitesmoke')
-    plot1.update_yaxes(mirror=True,ticks='outside',showline=True,linecolor='black', gridcolor='whitesmoke')
-
-    cb_umi_df = pd.read_csv(_cb_umi_file, sep = "\t", header = 0)
-    # 创建 Log-Log 散点图
-    plot2 = px.line(cb_umi_df, x='rank', y='umi_count_mean', color='cluster', log_x=True, log_y=True, markers=True,
-                    # color_discrete_map = {"blue": "single-cluster", "yellow": "multi-cluster", "red": "no-cluster"},
-                    color_discrete_sequence = px.colors.qualitative.Pastel2,
-                    title='Log-Log Plot of UMI Count Mean by CB',
-                    labels={'rank': 'Rank (log scale)', 'umi_count_mean': 'Mean of UMI Count (log scale)'})    
-    plot2.update_layout(
-        width=600, height=500,
-        plot_bgcolor='white', ###set the background color
-        yaxis_title=None, xaxis_title=None,
-        margin=dict(l=20, r=20, t=30, b=20))
-    ##update the axis style
-    plot2.update_xaxes(mirror=True,ticks='outside',showline=True,linecolor='black', gridcolor='whitesmoke')
-    plot2.update_yaxes(mirror=True,ticks='outside',showline=True,linecolor='black', gridcolor='whitesmoke')
-    
-    return plot1, plot2
-
 
 from bokeh.plotting import figure
 from bokeh.layouts import row, column  # 确保导入row和column
@@ -675,17 +281,22 @@ class BokehFigure:
         """返回(script, div)元组"""
         return components(self.layout)
 
-
-
 def prepare_legend(clusterdf, color_map, source, fig, xaxis, yaxis):
     # 创建分类图例项
     legend_items = []
     for cluster in sorted(clusterdf["Cluster"].unique()):
         cluster = str(cluster)  # 确保cluster是字符串
-        subset = ColumnDataSource({
-            xaxis: source.data[xaxis][np.array(source.data['cluster']) == cluster],
-            yaxis: source.data[yaxis][np.array(source.data['cluster']) == cluster]
-        })
+        
+        # 获取当前cluster的所有数据
+        cluster_mask = np.array(source.data['cluster']) == cluster
+        subset_data = {}
+        
+        # 复制原始数据源中的所有字段
+        for key in source.data.keys():
+            subset_data[key] = np.array(source.data[key])[cluster_mask]
+        
+        subset = ColumnDataSource(subset_data)
+        
         r = fig.scatter(
             x=xaxis, y=yaxis, 
             size=3,
@@ -710,6 +321,7 @@ def prepare_legend(clusterdf, color_map, source, fig, xaxis, yaxis):
         margin=10
     )
     return legend, legend_items
+
 
 def prepare_axis_range(clusterdf, _type="LD"):
 
@@ -865,7 +477,17 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
         
         legend, legend_items = prepare_legend(clusterdf, color_map, spatial_source, spatial_fig, 'x', 'y')
         spatial_fig.add_layout(legend, 'right')
-        
+
+        spatial_cluster_hover = HoverTool(
+            tooltips=[
+                ("Cluster", "@cluster"),
+                ("Position", "(@x, @y)"),
+                ("Percentage", "@pct{0.2%}")
+            ],
+            mode='mouse'
+        )
+        spatial_fig.add_tools(spatial_cluster_hover)
+
         # 左图控制滑块
         size_slider = Slider(width = 150, height=25, start=1, end=7, value=3, step=0.5, title="Point Size")
         rotate_slider = Slider(width = 150, height=25, start=0, end=360, value=0, step=1, title="Rotation Angle")
@@ -900,7 +522,20 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
         )
         legend, legend_items = prepare_legend(clusterdf, color_map, spatial_source, umap_fig, 'umap1', 'umap2')
         umap_fig.add_layout(legend, 'right')
-        
+
+        # 定义悬停工具
+        umap_cluster_hover = HoverTool(
+            tooltips=[
+                ("Cluster", "@cluster"),
+                ("UMAP", "(@umap1, @umap2)"),
+                ("Percentage", "@pct{0.2%}")
+            ],
+            mode='mouse'
+        )
+        # 显式添加悬停工具
+        umap_fig.add_tools(umap_cluster_hover)
+
+
         # 右图控制滑块
         umap_size_slider = Slider(width = 150, height=25, start=1, end=7, value=3, step=0.5, title="Point Size")
         # 右图回调
@@ -944,6 +579,17 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
             tools="pan,wheel_zoom,box_zoom,reset",
             toolbar_location="above"
         )
+        # 定义悬停工具
+        spatial_umi_hover = HoverTool(
+            tooltips=[
+                ("Position", "(@x, @y)"),
+                ("log(nUMI)", "@log_numi{0.2f}")
+            ],
+            mode='mouse'
+        )
+        # 显式添加悬停工具
+        spatial_fig.add_tools(spatial_umi_hover)
+
         # 绘制所有点（统一渲染器）
         spatial_renderer = spatial_fig.scatter(
             x='x', y='y', 
@@ -981,6 +627,7 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
             location=(0,0),
             title="log(UMI)"
         )
+                
         spatial_fig.add_layout(color_bar, 'right')        
         
         # ========== 右图：UMAP坐标 + log_nUMI颜色 ==========      
@@ -992,6 +639,16 @@ def spatial_scatter(_infile, _type = "UMI", oligochip="LD"):
             tools="pan,wheel_zoom,box_zoom,reset",
             toolbar_location="above"
         )
+        # 定义悬停工具
+        umap_umi_hover = HoverTool(
+            tooltips=[
+                ("UMAP", "(@umap1, @umap2)"),
+                ("log(nUMI)", "@log_numi{0.2f}")
+            ],
+            mode='mouse'
+        )
+        # 显式添加悬停工具
+        umap_fig.add_tools(umap_umi_hover)
         
         umap_renderer = umap_fig.scatter(
             x='umap1', y='umap2', size=3,

@@ -44,6 +44,7 @@ class Oligo:
         from space_sketcher.rna.src.spatial_barcode_extraction import stat_spatial_barcodes
         from space_sketcher.rna.src.assign_coordinate import assign_coordinate
         from space_sketcher.rna.src.dbscan_filter import dbscan_filter
+        print("test oligo")
         
         oligodir = os.path.join(self.outdir, "02.oligo")
         str_mkdir(oligodir)
@@ -56,6 +57,8 @@ class Oligo:
             )
         # run stat_spatial_barcodes
         if not os.path.exists(f"{oligodir}/spatial_umis.csv.gz"):
+            # print(f'\n{get_formatted_time()}\n'
+            #     f'Extracting spatial barcode information.')
             logger.info('Extracting spatial barcode information...')
             stat_spatial_barcodes(self.oligor1, self.oligor2, 
                                 self.oligochip, 
@@ -64,37 +67,42 @@ class Oligo:
                                 oligodir, self.threads)
         else:
             logger.info(f"{oligodir}/spatial_umis.csv.gz already exits, skip Extracting spatial barcode information.")
+            # print(f"{oligodir}/spatial_umis.csv.gz already exits, skip Extracting spatial barcode information.")
             
         ###Assign spatial barcodes coordinate
         # judge file exits
         judgeFilexits(
             self.coordfile,
-            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv",
+            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell/barcodes.tsv.gz",
             f"{oligodir}/spatial_umis.csv.gz",
             f"{oligodir}/sb_library_summary.temp.csv",
             )
 
         #run assign_coordinate
+        # print(f'\n{get_formatted_time()}\n'
+        #     f'Assigning coordinate for each spatial barcode.')
         logger.info('Assigning coordinate for each spatial barcode...')
         assign_coordinate(self.coordfile, self.oligochip, f"{oligodir}/spatial_umis.csv.gz",
-                          f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv",
+                          f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell/barcodes.tsv.gz",
                           f"{oligodir}/sb_library_summary.temp.csv",
                           self.sbwhitelist, oligodir)
         
         ###Filter cell barcode by dbscan clustering
         # judge file exits
         judgeFilexits(
-            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered",
+            f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell",
             f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/CellReads.stats",
             f"{oligodir}/cb_sb_coord.txt",
             )
 
         #run dbscan_filter
+        # print(f'\n{get_formatted_time()}\n'
+        #     f'Performing dbscan filtering.')
         logger.info("Performing dbscan filtering...")
         dbscan_filter(f"{oligodir}/cb_sb_coord.txt",
                       oligodir, 
                       self.maxumi, self.minumi, 
-                      f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/filtered", 
+                      f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/callcell", 
                       f"{self.outdir}/01.count/Solo.out/GeneFull_Ex50pAS/CellReads.stats", 
                       self.eps, self.min_samples, self.threads)        
 

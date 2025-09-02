@@ -206,6 +206,7 @@ def auto_detect_sb(seq: str, linkers: list) -> Tuple[str, bool]:
 def process_fastq_singlethread(
     r1_path: str,
     r2_path: str,
+    outfile: str,
     oligochip: str,
     cb_positions: List[Tuple[int, int]],
     umi_pos: Tuple[int, int],
@@ -213,9 +214,9 @@ def process_fastq_singlethread(
     sb_whitelist: Set[str] = None
 ):
     """
-    单进程顺序处理 FASTQ 文件，返回符合条件的 (CB, UMI, SB, count=1) 元组。
+    单进程顺序处理 FASTQ 文件
     """
-    results = []
+    # results = []
     umi_start, umi_len = umi_pos
     check_sb = oligochip == "LD"
     linkerinfo = {
@@ -227,11 +228,11 @@ def process_fastq_singlethread(
 
     linkers = linkerinfo[oligochip]
     total = cbmatched = 0
-    with dnaio.open(r1_path, r2_path, mode="r") as reader:
+    with dnaio.open(r1_path, r2_path, mode="r") as reader, open(outfile, "rt") as writer:
         for r1, r2 in reader:
             total += 1
             if total % 1_000_000 == 0:
-                print(f"Processed {total:,} read pairs...")
+                logger.info(f"Processed {total:,} read pairs...")
             cb_parts = [r1.sequence[start:start+length] for start, length in cb_positions]
             cb = "_".join(cb_parts) if len(cb_parts) > 1 else cb_parts[0]
 
@@ -246,21 +247,9 @@ def process_fastq_singlethread(
                 continue
             if sb == "":
                 continue
-            results.append(f"{cb},{umi},{sb},1")
+            writer.write(f"{cb},{umi},{sb},1\n")
           
-    csv_text = "Cell_Barcode,UMI,Spatial_Barcode,Read_Count\n" + "\n".join(results)
-
-    # 使用 Polars 从字符串读取 CSV
-    results = pl.read_csv(
-        source=csv_text.encode(),
-        separator=","
-    )
-    results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
-        pl.col("Read_Count").sum()
-    )
-    
-    print(f"Total reads processed: {total:,}, Cell barcode matched reads: {cbmatched:,}")
-    return results,total, cbmatched
+    return total, cbmatched
 
 @add_log
 def process_fastq_multithread(
@@ -300,15 +289,11 @@ def process_fastq_multithread(
         raise ValueError("Invalid oligochip")
 
     linkers = linkerinfo[oligochip]
-    if outdir is None:
-        raise ValueError("Output directory must be specified for multithreaded processing")
-    temp_dir = os.path.join(outdir, "_multithread_temp")
-
     # 如果目录已存在，先删除
-    if os.path.exists(temp_dir):
+    if os.path.exists(outdir):
         import shutil
-        shutil.rmtree(temp_dir)
-    os.makedirs(temp_dir)
+        shutil.rmtree(outdir)
+    os.makedirs(outdir)
 
     class SimplePipeline(Pipeline):
         def __init__(self):
@@ -354,7 +339,7 @@ def process_fastq_multithread(
             infiles.close()
             # cutadapt 未提供接口可以记录
             # 追加输出到文件中，每个进程一个文件
-            fname = f'{self.outdir}/_multithread_temp/barcodes_{pid}.txt'
+            fname = f'{self.outdir}/barcodes_{pid}.txt'
             with open(fname, 'a') as f:
                 f.writelines(results)
 
@@ -365,9 +350,9 @@ def process_fastq_multithread(
         pipeline = SimplePipeline()
         stats = runner.run(pipeline, Progress(every=1), outfiles=outfiles)
 
-    print(f"Total reads processed: {stats.n:,}, Matched reads: {stats.total_bp[0]:,}, Perfect matches: {stats.total_bp[1]:,}")
+    logger.info(f"Total reads processed: {stats.n:,}, Matched reads: {stats.total_bp[0]:,}, Perfect matches: {stats.total_bp[1]:,}")
     
-    return temp_dir,stats.n,stats.total_bp[0]
+    return stats.n,stats.total_bp[0]
 
 
 def safe_merge_files(temp_dir, final_path):
@@ -387,6 +372,7 @@ def calculate_statistics(df: pd.DataFrame, total_reads: int, matched_reads: int)
     return {
         "Total Spatial Reads": total_reads,
         "Spatial Reads with Valid Cellbarcode": matched_reads,
+        "Fraction of Spatial Reads with Valid Cellbarcode": round(matched_reads / total_reads, 4),
         "Valid Spatial Reads": valid_reads,
         "Fraction of Valid Spatial Reads": round(valid_reads / total_reads, 4),
         "Valid Spatial UMIs": valid_umis,
@@ -400,7 +386,7 @@ def stat_spatial_barcodes(r1fastq, r2fastq,
                           cbwhitelist, sbwhitelist, 
                           outdir, n_jobs) -> None:
     """主处理函数"""
-    print("Starting spatial barcode analysis")
+    logger.info("Starting spatial barcode analysis")
     os.makedirs(outdir, exist_ok=True)
     # 1. 准备白名单和位置信息
     pos_info = check_rnachemistry(rnachemistry, mapparams)
@@ -409,53 +395,48 @@ def stat_spatial_barcodes(r1fastq, r2fastq,
     cb_positions = list(zip(pos_info["cbstart"], pos_info["cblen"]))
     umi_pos = (pos_info["umistart"], pos_info["umilen"])
     # 2. 处理
+    final_path = f"{outdir}/spatial_umis.csv"
+    temp_dir = os.path.join(outdir, "_multithread_temp")
     if n_jobs == 1:
-        result_df, total_reads, total_matched = process_fastq_singlethread(
+        total_reads, total_matched = process_fastq_singlethread(
             r1fastq, r2fastq, oligochip,
             cb_positions=cb_positions,
             umi_pos=umi_pos,
             cb_whitelist= cb_whitelist, 
             sb_whitelist= sb_whitelist
         )
-        spatial_umis_path = os.path.join(outdir, 'spatial_umis.csv')
-        result_df.write_csv(spatial_umis_path)
     else:
-        temp_dir, total_reads, total_matched = process_fastq_multithread(
+        total_reads, total_matched = process_fastq_multithread(
             r1fastq, r2fastq, oligochip,
             cb_positions=cb_positions,
             umi_pos=umi_pos,
             cb_whitelist= cb_whitelist, 
             sb_whitelist= sb_whitelist,
             cores=n_jobs,
-            outdir=outdir
+            outdir=temp_dir
         )
-
-        # import subprocess
-        final_path = f"{outdir}/spatial_umis.csv"
         # 拼接内容文件（按顺序追加）
-        # subprocess.run(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True, check=True)
-        # os.system(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}")
-        # subprocess.check_call(f"cat {temp_dir}/barcodes_*.txt > {final_path} && rm -rf {temp_dir}", shell=True)
         safe_merge_files(temp_dir, final_path)
-        results = pl.read_csv(final_path,
-                            new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)
-        results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
-            pl.col("Read_Count").sum()
-        )
-        results.write_csv(final_path)
-        # os.system(f"gzip {final_path}") ###压缩
-        subprocess.check_call(f"gzip {final_path}", shell=True)
 
-    
+
+    results = pl.read_csv(final_path,
+                        new_columns=["Cell_Barcode", "UMI", "Spatial_Barcode", "Read_Count"],has_header=False)
+    results = results.group_by(["Cell_Barcode", "UMI", "Spatial_Barcode"]).agg(
+        pl.col("Read_Count").sum()
+    )
+    results.write_csv(final_path)
+    subprocess.check_call(f"gzip {final_path}", shell=True)
+
     # 3. 计算并保存统计信息
-    summary = calculate_statistics(result_df, total_reads, total_matched)
+    summary = calculate_statistics(results, total_reads, total_matched)
     outstat = os.path.join(outdir, "sb_library_summary.temp.csv")
     with open(outstat, "wt") as outf:
         for k, v in summary.items():
             print(f"{k},{v}", file=outf)
 
-    print(f"Statistics saved to {outstat}")
-    del result_df
+    logger.info(f"Statistics saved to {outstat}")
+    del results
+    
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Counting the spatial umi saturation')

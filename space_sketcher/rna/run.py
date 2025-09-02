@@ -4,6 +4,7 @@ import time
 import typer
 from typing_extensions import Annotated
 from typing import Optional
+from loguru import logger
 from space_sketcher.__init__ import __root_dir__
 
 
@@ -31,8 +32,8 @@ class Runpipe:
         self.ndims = args.ndims
         self.nvariables = args.nvariables
         self.resolution = args.resolution
-        self.forcecells = args.forcecells
-        self.minrnaumi = args.minrnaumi
+        # self.forcecells = args.forcecells
+        # self.minrnaumi = args.minrnaumi
         self.dev = args.dev
         self.nobam = args.nobam
         self.velo = args.velo
@@ -65,12 +66,11 @@ class Runpipe:
         from space_sketcher.tools.utils import (
             str_mkdir, 
             judgeFilexits,
-            execute_and_log,
+            start_print_cmd,
             bin_path,
             rm_temp,
         )
         
-        print("test run")
         ### run       
         judgeFilexits(
             self.rna1,
@@ -81,10 +81,10 @@ class Runpipe:
             self.coordfile,
             )
 
-        print(bin_path())
+        logger.info(bin_path())
 
         if self.cbwhitelist is None and self.mapparams is None:
-            print("Both cbwhitelist and mapparams are None, please check!")
+            logger.info("Both cbwhitelist and mapparams are None, please check!")
             exit(1)
         # Base command components
         count_cmd = [
@@ -97,8 +97,8 @@ class Runpipe:
             f"--threads {self.threads}",
             f"--genomeDir {self.genomeDir}",
             f"--calling_method {self.calling_method}",
-            f"--forcecells {self.forcecells}",
-            f"--minumi {self.minrnaumi}",
+            # f"--forcecells {self.forcecells}",
+            # f"--minumi {self.minrnaumi}",
         ]
         # Add optional parameters if they exist
         if self.cbwhitelist is not None:
@@ -170,15 +170,16 @@ class Runpipe:
         str_mkdir(logdir)
         start_time = time.time()
         for pipe, pipecmd in cmdlist.items():
-            execute_and_log(pipecmd, pipe, logdir)
+            # execute_and_log(pipecmd, pipe, logdir)
+            start_print_cmd(pipecmd, pipe, logdir)
         
         end_time = time.time()
         analysis_time = end_time - start_time
         analysis_time_minutes, analysis_time_seconds = divmod(analysis_time, 60)
         analysis_time_hours, analysis_time_minutes = divmod(analysis_time_minutes, 60)
 
-        print(f'\nAnalysis Finished')
-        print(f'Elapsed Time: {int(analysis_time_hours)} hours {int(analysis_time_minutes)} minutes {int(analysis_time_seconds)} seconds')
+        logger.info(f'\nAnalysis Finished')
+        logger.info(f'Elapsed Time: {int(analysis_time_hours)} hours {int(analysis_time_minutes)} minutes {int(analysis_time_seconds)} seconds')
 
         ###remove bamfile if no bam
         bamfile = os.path.join(self.outdir,self.name,"01.count/Aligned.sortedByCoord.out.bam")
@@ -205,7 +206,7 @@ def run_app(
     coordfile: Annotated[str, typer.Option("--coordfile", "-cf", help="Coordinate file with spatial barcodes", prompt=True, show_default=False)],
     
     # 可选参数
-    outdir: Annotated[str, typer.Option("--outdir", "-o", help=f"Output directory")] = os.getcwd(),
+    outdir: Annotated[str, typer.Option("--outdir", "-o", help=f"Output directory, default: current directory", show_default=False)] = os.getcwd(),
     cbwhitelist: Annotated[Optional[str], typer.Option("--cbwhitelist", "-cb", help="Cell barcode whitelist file")] = None,
     sbwhitelist: Annotated[Optional[str], typer.Option("--sbwhitelist", "-sb", help="Spatial barcode whitelist file")] = None,
     rnachemistry: Annotated[str, typer.Option("--rnachemistry", "-rc", help="Chemistry version: 10X/leader_v1/other")] = "leader_v1",
@@ -223,8 +224,8 @@ def run_app(
     nvariables: Annotated[int, typer.Option("--nvariables", help="Number of variable genes")] = 2000,
     resolution: Annotated[float, typer.Option("--resolution", help="Clustering resolution")] = 0.5,
     reference: Annotated[Optional[str], typer.Option("--reference", help="Reference name (default: genomeDir basename)", show_default=False)] = None,
-    forcecells: Annotated[int, typer.Option("--forcecells", help="Force pipeline to use this number of beads, bypassing cell calling algorithm.")] = 0,
-    minrnaumi: Annotated[int, typer.Option("--minrnaumi", help="The min rna umi for use emptydrops")] = 200,
+    # forcecells: Annotated[int, typer.Option("--forcecells", help="Force pipeline to use this number of beads, bypassing cell calling algorithm.")] = 0,
+    # minrnaumi: Annotated[int, typer.Option("--minrnaumi", help="The min rna umi for use emptydrops")] = 200,
     dev: Annotated[bool, typer.Option("--dev", help="Enable development mode (default: False)")] = False,
     nobam: Annotated[bool, typer.Option("--nobam", help="Remove BAM files after running (default: False)")] = False,
     velo: Annotated[bool, typer.Option("--velo", help="Enable STARsolo Velocyto mode (default: False)")] = False

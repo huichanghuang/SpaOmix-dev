@@ -7,6 +7,7 @@ from typing import Optional
 from subprocess import check_call
 from space_sketcher.tools.utils import judgeFilexits, change_path
 from space_sketcher.__init__ import __root_dir__
+from loguru import logger
 
 def count_chromosomes(genome_file):
     chromosomes = set()
@@ -39,15 +40,15 @@ def star_index(fasta,gtf,genomeDir,star_program,limitram,threads):
     ]
     star_cmd_str = ' '.join(star_cmd)
 
-    print('STAR verison: 2.7.11b')
-    print('runMode: genomeGenerate')
-    print('runThreadN: %s'%threads)
-    print('limitGenomeGenerateRAM: %s'%limitram)
-    print('genomeSAindexNbases: %s'%SAindexNbases)
-    print('genomeChrBinNbits: %s'%chr_bins)
-    print('genomeDir: %s'%genomeDir)
-    print('fasta: %s'%fasta)
-    print('gtf: %s'%gtf)
+    logger.info('STAR verison: 2.7.11b')
+    logger.info('runMode: genomeGenerate')
+    logger.info('runThreadN: %s'%threads)
+    logger.info('limitGenomeGenerateRAM: %s'%limitram)
+    logger.info('genomeSAindexNbases: %s'%SAindexNbases)
+    logger.info('genomeChrBinNbits: %s'%chr_bins)
+    logger.info('genomeDir: %s'%genomeDir)
+    logger.info('fasta: %s'%fasta)
+    logger.info('gtf: %s'%gtf)
 
     sys.stdout.flush()
     check_call(star_cmd_str,shell=True)
@@ -74,7 +75,7 @@ class Ref:
                        starbin, 
                        self.limitram, 
                        self.threads)
-        print("\033[0;32;40mAnalysis Complete\033[0m")
+        logger.info("\033[0;32;40mAnalysis Complete\033[0m")
 
 
 def mkref_app(

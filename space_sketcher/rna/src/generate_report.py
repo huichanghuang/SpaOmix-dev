@@ -1,4 +1,5 @@
 import os
+import re
 import copy
 import argparse
 import pandas as pd
@@ -244,15 +245,23 @@ def get_metrics(indir: Path|str, sample, kit, reference):
     old_rna_summary_ori = csv2dict(old_rna_summary_file)
     old_rna_summary_ori["Total Gene Detected"] = old_rna_summary_ori.pop("Total GeneFull_Ex50pAS Detected")
     retain_keys = ["Number of Reads", "Reads With Valid Barcodes", 
-                              "Sequencing Saturation", "Q30 Bases in CB+UMI", 
-                              "Q30 Bases in RNA read", "Estimated Number of Cells",
-                              "Total Gene Detected"]
+                    "Sequencing Saturation", "Q30 Bases in CB+UMI", 
+                    "Q30 Bases in RNA read", "Estimated Number of Cells",
+                    "Total Gene Detected"]
+    rename_keys = ["Fraction of Unique Reads in Cells", 
+                   "Mean Reads per Cell", "Median Reads per Cell",
+                   "Mean UMI per Cell", "Median UMI per Cell"]
+    rename_rna_summary = {"Original "+k: old_rna_summary_ori[k] for k in rename_keys if k in old_rna_summary_ori}
+    rename_rna_summary["Original Mean Gene per Cell"] = old_rna_summary_ori["Mean GeneFull_Ex50pAS per Cell"]
+    rename_rna_summary["Original Median Gene per Cell"] = old_rna_summary_ori["Median GeneFull_Ex50pAS per Cell"]
+    
     old_rna_summary = {k: old_rna_summary_ori[k] for k in retain_keys if k in old_rna_summary_ori}
     new_rna_summary = csv2dict(new_rna_summary_file)
     spatial_summary = csv2dict(spatial_summary_file)
 
     ###merge
     summary.update(old_rna_summary)
+    summary.update(rename_rna_summary)
     summary.update(new_rna_summary)
     summary.update(spatial_summary)
 
@@ -322,7 +331,8 @@ def format_summary(summary: dict):
         "Reads With Valid Barcodes",
         "Sequencing Saturation",
         "Spatial Barcode Saturation",
-        *[key for key in formatted_summary.keys() if re.search(r"^Q30|^Reads Mapped|^Fraction of|-cluster$", key)],
+        "Spatial Barcode Saturation in Cells",
+        *[key for key in formatted_summary.keys() if re.search(r"^Q30|^Reads Mapped|^Fraction of|^Original Fraction of|-cluster$", key)],
     ]
     for k in pct_keys:
         if not isinstance(formatted_summary[k], str):
@@ -350,8 +360,6 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
         kneefile1,
         kneefile2,
         sequencing_saturation_file,
-        metadata,
-        markergenefile
     )
 
     _summary = csv2dict(summaryfile)    
@@ -401,6 +409,13 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
         "Mean Gene per Cell",
         "Median Gene per Cell",
         "Total Gene Detected",
+        "Original Fraction of Unique Reads in Cells",
+        "Original Mean Reads per Cell",
+        "Original Median Reads per Cell",
+        "Original Mean UMI per Cell",
+        "Original Median UMI per Cell",
+        "Original Mean Gene per Cell",
+        "Original Median Gene per Cell",
     ]
     cell_help_msg = {
         "Estimated Number of Cells": "The number of barcodes associated with at least one cell.",
@@ -414,20 +429,37 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
         "Mean Gene per Cell": "The average number of Genes per cell detected.",
         "Median Gene per Cell": "The median number of Genes per cell detected.",
         "Total Gene Detected": "The number of genes with at least one UMI count in cell detected.",
+        "Original Fraction of Unique Reads in Cells": "The proportion of unique mapped reads assigned to cell associated barcodes before location filtering.",
+        "Original Mean Reads per Cell": "The average number of mapped reads per cell detected before location filtering.",
+        "Original Median Reads per Cell": "The median number of unique mapped reads per cell detected before location filtering.",
+        "Original Mean UMI per Cell": "The average number of UMIs per cell detected before location filtering.",
+        "Original Median UMI per Cell": "The median number of UMIs per cell detected before location filtering.",
+        "Original Mean Gene per Cell": "The average number of Genes per cell detected before location filtering.",
+        "Original Median Gene per Cell": "The median number of Genes per cell detected before location filtering.",
     }
+
     if not dev:
-        to_remove = ["Fraction of Unique Reads in Cells", "UMIs in Cells"]
+        to_remove = ["Fraction of Unique Reads in Cells", "Fraction of UMIs in Cells",
+                     *[key for key in summary.keys() if re.search(r"^Original ", key)]]
         keys = list(filter(lambda x: x not in to_remove, keys))
         temp_cell_help_msg = {key:val for key, val in cell_help_msg.items() if key not in to_remove }
         cell_help_msg = copy.deepcopy(temp_cell_help_msg)
-
-    content = (
-        f'<div class="row"><div class = "col-6">'
-        f'{to_bootstrap_table({key: summary[key] for key in keys[0:5]})}'
-        f'</div><div class = "col-6">'
-        f'{to_bootstrap_table({key: summary[key] for key in keys[5:]})}'
-        f'</div></div>'
-    )
+        
+        content = (
+            f'<div class="row"><div class = "col-6">'
+            f'{to_bootstrap_table({key: summary[key] for key in keys[0:5]})}'
+            f'</div><div class = "col-6">'
+            f'{to_bootstrap_table({key: summary[key] for key in keys[5:]})}'
+            f'</div></div>'
+        )
+    else:
+        content = (
+            f'<div class="row"><div class = "col-6">'
+            f'{to_bootstrap_table({key: summary[key] for key in keys[0:11]})}'
+            f'</div><div class = "col-6">'
+            f'{to_bootstrap_table({key: summary[key] for key in keys[11:]})}'
+            f'</div></div>'
+        )        
     cell_str = report_card(
         title="Cells",
         help_msg=[{"name": k, "value": v} for (k, v) in cell_help_msg.items()],
@@ -443,6 +475,7 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
         "Spatial Barcode Saturation",
         "Fraction of Valid Spatial Reads in Cells",
         "Fraction of Valid Spatial UMIs in Cells",
+        "Spatial Barcode Saturation in Cells",
         "Total Spatial Barcodes with Location on Chip",
         "Fraction of Unique Valid Spatial Barcodes with Location on Chip",
         "Fraction of Spatial Reads in Cells with Location on Chip",
@@ -460,14 +493,15 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
         "Spatial Barcode Saturation": "The percentage of spatial reads originating from a duplicate UMI.",
         "Fraction of Valid Spatial Reads in Cells": "The fraction of valid spatial reads in cell associated barcodes.",
         "Fraction of Valid Spatial UMIs in Cells": "The fraction of valid spatial UMIs in cell associated barcodes.",
+        "Spatial Barcode Saturation in Cells": "The percentage of spatial reads originating from a duplicate UMI in cell associated barcodes.",
         "Total Spatial Barcodes with Location on Chip": "The number of spatial barcodes with location on chip.",
         "Fraction of Unique Valid Spatial Barcodes with Location on Chip": "The fraction of spatial barcodes on the chip that are both unique and match the whitelist.",
         "Fraction of Spatial Reads in Cells with Location on Chip": "The fraction of spatial reads in cell associated barcodes and with location on chip.",
         "Median top100 Spatial UMI Mean per Cell": "Median across cells of the mean UMI count in the top 100 spatial barcodes per cell.",
         "Mean top100 Spatial UMI Mean per Cell": "Mean across cells of the mean UMI count in the top 100 spatial barcodes per cell",
-        "single-cluster": "The proportion of cell associated barcodes with a single cluster in dbscan clustering.",
-        "multi-cluster": "The proportion of cell associated barcodes with multiple cluster in dbscan clustering.",
-        "no-cluster": "The proportion of cell associated barcodes without any cluster in dbscan clustering.",
+        "single-cluster": "The proportion of cell associated barcodes with a single cluster in spatial barcode dbscan clustering.",
+        "multi-cluster": "The proportion of cell associated barcodes with multiple cluster in spatial barcode dbscan clustering.",
+        "no-cluster": "The proportion of cell associated barcodes without any cluster in spatial barcode dbscan clustering.",
     }
     if not dev:
         to_remove = ["Median top100 Spatial UMI Mean per Cell",
@@ -668,158 +702,140 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
     </div>
     """
 
-    ######Analysis 页面
-    # 小提琴图
-    vio_fig = distribution_violin(metadata, samplename=summary["Sample"])
-    content = vio_fig.to_html(
-        full_html=False,
-        default_height="450px",
-        default_width="950px",
-        include_plotlyjs=False,
-    )
-    violin_str = report_card(
-        title="Distribution",
-        help_msg=[
-            {
-                "name": "Gene counts",
-                "value": "The distribution of effective gene counts detected in each cell.",
-            },
-            {
-                "name": "UMI counts",
-                "value": "The distribution of UMI counts detected in each cell.",
-            },
-            {
-                "name": "Mito percentage",
-                "value": "The distribution of mitochondrial fraction detected in each cell.",
-            },
-        ],
-        content=f'<div class="d-flex justify-content-end">{content}</div>',
-        style="width: 1000px",
-    )
 
-    #UMI distribution on UMAP and Spatial location
-    umi_fig = spatial_scatter(metadata, "UMI", oligochip)
-    content = umi_fig.bokeh_to_html()
-    # def _to_html(fig):
-    #     return fig.to_html(
-    #         full_html=False,
-    #         default_height="550px",
-    #         default_width="480px",
-    #         include_plotlyjs=False,
-    #     )
-
-    # content = (
-    #     f'<div class="row"><div class = "col-6">{_to_html(umi_fig1)}'
-    #     f'</div><div class = "col-6">'
-    #     f"{_to_html(umi_fig2)}</div></div>"
-    # )
-    umi_str = report_card(
-        title="UMI Counts",
-        help_msg=[
-            "The display is limited to a random subset of cells.",
-            {
-                "name": "left",
-                "value": "This plot displays the log2(UMI counts) for each spot barcode, each associated with an exact coordinate on the chip, and is colored by the log2 value of UMI counts.",
-            },
-            {
-                "name": "right",
-                "value": "This plot shows the log2(UMI counts) for each spot barcode. Each dot associated with a spot barcode and is colored by the log2 value of UMI counts. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
-            },
-        ],
-        # content=content,
-        content=f'<div class="d-flex justify-content-end">{content}</div>',
-        style="width: 1000px",
-    )
-
-    #Cluster distribution on UMAP and Spatial location
-    cluster_fig = spatial_scatter(metadata, "Cluster", oligochip)
-    content = cluster_fig.bokeh_to_html()
-    # content = cluster_fig.to_html(
-    #     full_html=False,
-    #     default_height="450px",
-    #     default_width="1000px",
-    #     include_plotlyjs=False,
-    # )
-    # content = (
-    #     f'<div class="row"><div class = "col-6">{_to_html(cluster_fig1)}'
-    #     f'</div><div class = "col-6">'
-    #     f"{_to_html(cluster_fig2)}</div></div>"
-    # )
-    cluster_str = report_card(
-        title="Cluster",
-        help_msg=[
-            "The display is limited to a random subset of cells.",
-            {
-                "name": "left",
-                "value": "This plot shows the automated clustering result for each cell-barcode by UMAP algorithm. each associated with an exact coordinate on the chip, and is colored according to different cluster.",
-            },
-            {
-                "name": "right",
-                "value": "This plot shows the automated clustering result for each cell-barcode by UMAP algorithm. Each dot associated with a cell barcode and is colored according to different cluster. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
-            },
-        ],
-        # content=content,
-        content=f'<div class="d-flex justify-content-end">{content}</div>',
-        style="width: 1000px",
-    )
-
-    # marker gene
-    marker_genes = pd.read_csv(markergenefile, sep = "\t")
-    marker_genes.columns = ["cluster", "gene", "scores", "log2FC", "pvals", "pvals_adj", "pct_nz_group", "pct_nz_reference"]
-    marker_genes = (
-        marker_genes.groupby("cluster", observed=True)
-        .apply(
-            lambda x: x.sort_values(by="pvals_adj", ascending=True).head(30),
-            include_groups=False,
+    if float(n_cells) > 50: ###ncells<50没有必要做analysis分析
+        judgeFilexits(
+            metadata,
+            markergenefile
+        )        
+        ######Analysis 页面
+        # 小提琴图
+        vio_fig = distribution_violin(metadata, samplename=summary["Sample"])
+        content = vio_fig.to_html(
+            full_html=False,
+            default_height="450px",
+            default_width="950px",
+            include_plotlyjs=False,
         )
-        .reset_index(level=0)
-    )
-    # 格式化
-    marker_genes["scores"] = marker_genes["scores"].map(lambda x: f"{x:.4f}")
-    marker_genes["log2FC"] = marker_genes["log2FC"].map(lambda x: f"{x:.4f}")
-    marker_genes["pvals"] = marker_genes["pvals"].map(lambda x: f"{x:.4f}")
-    marker_genes["pvals_adj"] = marker_genes["pvals_adj"].map(lambda x: f"{x:.4f}")
-    marker_genes["pct_nz_group"] = marker_genes["pct_nz_group"].map(lambda x: f"{x:.4f}")
-    marker_genes["pct_nz_reference"] = marker_genes["pct_nz_reference"].map(lambda x: f"{x:.4f}")
+        violin_str = report_card(
+            title="Distribution",
+            help_msg=[
+                {
+                    "name": "Gene counts",
+                    "value": "The distribution of effective gene counts detected in each cell.",
+                },
+                {
+                    "name": "UMI counts",
+                    "value": "The distribution of UMI counts detected in each cell.",
+                },
+                {
+                    "name": "Mito percentage",
+                    "value": "The distribution of mitochondrial fraction detected in each cell.",
+                },
+            ],
+            content=f'<div class="d-flex justify-content-end">{content}</div>',
+            style="width: 1000px",
+        )
 
-    marker_str = report_card(
-        title="Genes",
-        help_msg=[
-            "The table shows the top 30 differentially expressed genes for each cluster. \
-            Here a differential expression test was performed between each cluster and the rest of the sample for each feature. \
-            The avg_log2FC is an estimate of the log2 ratio of expression in a cluster to that in all other cells. \
-            The p_val is a measure of the statistical significance of the expression difference and \
-            the p_val_adj is adjusted p-value, based on bonferroni correction using all features in the dataset. \
-            pct_nz_group is the percentage of cells within the current cluster/group where the gene is detected (expression value > 0), \
-            pct_nz_reference is the percentage of cells outside the target group (i.e., all other cells) where the gene is detected."
-        ],
-        content=tbl(marker_genes, id="table"),
-    )
-    js = """<script>
-        let myTable = new JSTable("#table", {
-            sortable: true,
-            searchable: true,
-            perPage: 10,
-        });
-        </script>"""
+        #UMI distribution on UMAP and Spatial location
+        umi_fig = spatial_scatter(metadata, "UMI", oligochip)
+        content = umi_fig.bokeh_to_html()
+        umi_str = report_card(
+            title="UMI Counts",
+            help_msg=[
+                "The display is limited to a random subset of cells.",
+                {
+                    "name": "left",
+                    "value": "This plot displays the log2(UMI counts) for each spot barcode, each associated with an exact coordinate on the chip, and is colored by the log2 value of UMI counts.",
+                },
+                {
+                    "name": "right",
+                    "value": "This plot shows the log2(UMI counts) for each spot barcode. Each dot associated with a spot barcode and is colored by the log2 value of UMI counts. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
+                },
+            ],
+            content=f'<div class="d-flex justify-content-end">{content}</div>',
+            style="width: 1000px",
+        )
 
-    analysis_page = f"""
-        <div class="row">
-            <div class="col mb-4">
-                {violin_str}
-                <div class="mt-4">
-                {umi_str}
+        #Cluster distribution on UMAP and Spatial location
+        cluster_fig = spatial_scatter(metadata, "Cluster", oligochip)
+        content = cluster_fig.bokeh_to_html()
+        cluster_str = report_card(
+            title="Cluster",
+            help_msg=[
+                "The display is limited to a random subset of cells.",
+                {
+                    "name": "left",
+                    "value": "This plot shows the automated clustering result for each cell-barcode by UMAP algorithm. each associated with an exact coordinate on the chip, and is colored according to different cluster.",
+                },
+                {
+                    "name": "right",
+                    "value": "This plot shows the automated clustering result for each cell-barcode by UMAP algorithm. Each dot associated with a cell barcode and is colored according to different cluster. The coordinate axes represents the 2-dimensional embedding produced by the UMAP(Uniform Manifold Approximation and Projection)algorithm.",
+                },
+            ],
+            content=f'<div class="d-flex justify-content-end">{content}</div>',
+            style="width: 1000px",
+        )
+
+        # marker gene
+        marker_genes = pd.read_csv(markergenefile, sep = "\t")
+        marker_genes.columns = ["cluster", "gene", "scores", "log2FC", "pvals", "pvals_adj", "pct_nz_group", "pct_nz_reference"]
+        marker_genes = (
+            marker_genes.groupby("cluster", observed=True)
+            .apply(
+                lambda x: x.sort_values(by="pvals_adj", ascending=True).head(30),
+                include_groups=False,
+            )
+            .reset_index(level=0)
+        )
+        # 格式化
+        marker_genes["scores"] = marker_genes["scores"].map(lambda x: f"{x:.4f}")
+        marker_genes["log2FC"] = marker_genes["log2FC"].map(lambda x: f"{x:.4f}")
+        marker_genes["pvals"] = marker_genes["pvals"].map(lambda x: f"{x:.4f}")
+        marker_genes["pvals_adj"] = marker_genes["pvals_adj"].map(lambda x: f"{x:.4f}")
+        marker_genes["pct_nz_group"] = marker_genes["pct_nz_group"].map(lambda x: f"{x:.4f}")
+        marker_genes["pct_nz_reference"] = marker_genes["pct_nz_reference"].map(lambda x: f"{x:.4f}")
+
+        marker_str = report_card(
+            title="Genes",
+            help_msg=[
+                "The table shows the top 30 differentially expressed genes for each cluster. \
+                Here a differential expression test was performed between each cluster and the rest of the sample for each feature. \
+                The avg_log2FC is an estimate of the log2 ratio of expression in a cluster to that in all other cells. \
+                The p_val is a measure of the statistical significance of the expression difference and \
+                the p_val_adj is adjusted p-value, based on bonferroni correction using all features in the dataset. \
+                pct_nz_group is the percentage of cells within the current cluster/group where the gene is detected (expression value > 0), \
+                pct_nz_reference is the percentage of cells outside the target group (i.e., all other cells) where the gene is detected."
+            ],
+            content=tbl(marker_genes, id="table"),
+        )
+        js = """<script>
+            let myTable = new JSTable("#table", {
+                sortable: true,
+                searchable: true,
+                perPage: 10,
+            });
+            </script>"""
+
+        analysis_page = f"""
+            <div class="row">
+                <div class="col mb-4">
+                    {violin_str}
+                    <div class="mt-4">
+                    {umi_str}
+                    </div>
+                    <div class="mt-4">
+                    {cluster_str}
+                    </div>
                 </div>
-                <div class="mt-4">
-                {cluster_str}
+                <div class="col mb-4">
+                    {marker_str}
                 </div>
             </div>
-            <div class="col mb-4">
-                {marker_str}
-            </div>
-        </div>
-        """
-    analysis_page += js
+            """
+        analysis_page += js
+    else:
+        analysis_page = ""
 
     links, scripts = get_resource(cdn=cdn)
 
