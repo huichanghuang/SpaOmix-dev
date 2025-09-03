@@ -368,6 +368,7 @@ def calculate_statistics(df: pd.DataFrame, total_reads: int, matched_reads: int)
 
     valid_reads = df["Read_Count"].sum()
     valid_umis = len(df)
+    total_sb = len(df["Spatial_Barcode"].unique())
     
     return {
         "Total Spatial Reads": total_reads,
@@ -376,7 +377,8 @@ def calculate_statistics(df: pd.DataFrame, total_reads: int, matched_reads: int)
         "Valid Spatial Reads": valid_reads,
         "Fraction of Valid Spatial Reads": round(valid_reads / total_reads, 4),
         "Valid Spatial UMIs": valid_umis,
-        "Spatial Barcode Saturation": round(1 - (valid_umis / valid_reads), 4) if valid_reads else 0
+        "Spatial Barcode Saturation": round(1 - (valid_umis / valid_reads), 4) if valid_reads else 0, 
+        "Total Spatial Barcodes in Library": total_sb
     }
 
 

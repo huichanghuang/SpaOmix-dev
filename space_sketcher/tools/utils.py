@@ -1,16 +1,12 @@
 import os
 import sys
-import json
 import time
 import logging
 import sys
-import io
 import shutil
-import base64
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from datetime import timedelta
 from functools import wraps
 from typing import Union, List
 from space_sketcher.__init__ import __root_dir__
@@ -150,44 +146,8 @@ def start_print_cmd(
         except Exception as e:
             logger.error("[UNEXPECTED ERROR] %s", str(e))
             raise
-        # # 创建完成标记文件
-        # with open(os.path.join(log_dir, f".{name}.done"), 'w') as f:
-        #     f.write("done")
     else:
         logger.info(f".{name}.done or .{name}.skipped already exists, skip running {name}")
-
-
-# def setup_logging(name, log_dir):
-#     today = time.strftime('%Y%m%d', time.localtime(time.time()))
-#     logfile = f'{log_dir}/log/{today}.txt'
-#     logger = logging.getLogger(name)
-    
-#     if not logger.handlers:
-#         logger.setLevel(logging.INFO)
-#         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s \n%(message)s')
-        
-#         file_handler = logging.FileHandler(logfile, encoding="utf8")
-#         file_handler.setLevel(logging.DEBUG)
-#         file_handler.setFormatter(formatter)
-        
-#         console_handler = logging.StreamHandler(sys.stdout)
-#         console_handler.setLevel(logging.ERROR)
-#         console_handler.setFormatter(formatter)
-        
-#         logger.addHandler(file_handler)
-#         logger.addHandler(console_handler)
-    
-#     return logger
-
-# def logging_call(popenargs, name, log_dir):
-#     logger = setup_logging(name, log_dir)
-
-#     try:
-#         output = subprocess.check_output(popenargs, shell=True, stderr=subprocess.STDOUT, universal_newlines=True)
-#         logger.info('%s', output)
-#     except subprocess.CalledProcessError as e:
-#         logger.error('Command failed with exit code %d', e.returncode)
-#         logger.error('%s', e.output)
 
 
 def judgeFilexits(*args):
