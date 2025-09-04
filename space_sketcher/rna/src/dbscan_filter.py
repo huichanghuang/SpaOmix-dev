@@ -171,14 +171,20 @@ def perform_dbscan_parallel(df, eps=150, min_samples=6, n_jobs=4, batch_size=100
     }
     cb_cluster = pd.DataFrame(cluster_data)
     
-    ## 聚类统计
-    cluster_stats = cb_cluster['cluster'].value_counts().reset_index()
-    cluster_stats.columns = ['cluster_type', 'counts']
+    all_cluster_types = ['single-cluster', 'multi-cluster', 'no-cluster']
+    actual_counts = cb_cluster['cluster'].value_counts()
+
+    cluster_stats = pd.DataFrame({
+        'cluster_type': all_cluster_types,
+        'counts': [actual_counts.get(cluster_type, 0) for cluster_type in all_cluster_types]
+    })
+
+    total_counts = cluster_stats['counts'].sum()
     cluster_stats['ratio'] = np.round(
-        cluster_stats['counts'] / cluster_stats['counts'].sum(), 
+        cluster_stats['counts'] / total_counts if total_counts > 0 else 0, 
         4
     )
-    
+
     return coord_df, cb_cluster, cluster_stats
 
 def generate_plots(df, cb_cluster, subsb_umi_summary, outdir):
