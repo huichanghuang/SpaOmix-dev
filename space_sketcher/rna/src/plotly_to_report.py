@@ -228,7 +228,7 @@ my36colors = ['#E5D2DD', '#53A85F', '#F1BB72', '#F3B1A0', '#D6E7A3', '#57C3F3',
 def distribution_violin(clusterfile, samplename):
 
     clusterdf = pd.read_csv(clusterfile, header=0, sep="\t")
-    cols = ["CB", "UMI counts", "Gene counts", "Mito Percentage", "xcoord", "ycoord", "UMAP1", "UMAP2", "Cluster"]
+    cols = ["CB", "xcoord", "ycoord", "UMI counts", "UMAP1", "UMAP2", "Cluster", "Gene counts", "Mito Percentage"]
     clusterdf.columns = cols
     clusterdf["sample"] = samplename
     fig = make_subplots(rows=1, cols=3, 
