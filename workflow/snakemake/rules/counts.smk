@@ -83,3 +83,36 @@ rule counts:
         echo "{params.cmd}" >& {log}
         {params.cmd} >>{log} 2>&1
         """
+
+rule check_contamination:
+    input:
+        os.path.join(config["outdir"], "{sample}/.all_analysis.done"),
+    output:
+        touch(os.path.join(config["workdir"], "{sample}/.check_contamination.done")),
+    params:
+        Rpath = os.path.join(config["conda_env_path"], "bin/Rscript"),
+        Rscript = os.path.join(SMK_PATH, "src/check_contamination.R"),
+        matrixdir = os.path.join(config["workdir"], "{sample}/04.report/SCST"),
+        outdir = os.path.join(config["workdir"], "{sample}"),
+    threads: config["thread"],
+    log:
+        os.path.join(config["workdir"], "log/{sample}.check_contamination.log"),
+    shell:
+        "time {params.Rpath} {params.Rscript} --matrixdir {params.matrixdir} "
+        "--outdir {params.outdir} --samplename {wildcards.sample} >{log} 2>&1\n"
+
+rule cb_distance:
+    input:
+        os.path.join(config["outdir"], "{sample}/.all_analysis.done"),
+    output:
+        os.path.join(config["workdir"], "{sample}/{sample}.cb_distance.png"),
+    params:
+        python = os.path.join(config["conda_env_path"], "bin/python"),
+        pysrc = os.path.join(SMK_PATH, "src/calculate_distance_distribution.py"),
+        infile = os.path.join(config["workdir"], "{sample}/04.report/SCST/spatial_location_information.txt.gz"),
+        outdir = os.path.join(config["workdir"], "{sample}"),
+    threads: config["thread"],
+    log:
+        os.path.join(config["workdir"], "log/{sample}.cb_distance.log"),
+    shell:
+        "time {params.python} {params.pysrc} --infile {params.infile} --outfile {output} >{log} 2>&1\n"
