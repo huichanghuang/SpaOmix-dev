@@ -32,7 +32,8 @@ class Report:
         )
         
         ###copy files
-        os.system(f"cp -r {self.outdir}/02.oligo/filtered_matrix {reportdir}/SCST")
+        if not os.path.exists(f"{reportdir}/SCST"):
+            os.system(f"cp -r {self.outdir}/02.oligo/filtered_matrix {reportdir}/SCST")
         (Path(self.outdir) / ".report.done").touch()
 
 

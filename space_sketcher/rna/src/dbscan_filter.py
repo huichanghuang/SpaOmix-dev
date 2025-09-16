@@ -50,7 +50,7 @@ def write_10x_matrix(output_dir, adata):
         gene_symbols = adata.var_names.values
     
     # 3. 使用numpy数组直接构建特征数据（避免DataFrame创建开销）
-    features_file = os.path.join(output_dir, 'genes.tsv.gz')
+    features_file = os.path.join(output_dir, 'features.tsv.gz')
     with gzip.open(features_file, 'wt') as f:
         for i in range(adata.n_vars):
             f.write(f"{gene_ids[i]}\t{gene_symbols[i]}\tGene Expression\n")
@@ -94,7 +94,7 @@ def process_single_cell(barcode, cell_data, eps=150, min_samples=6):
     
     # 跳过太小的簇
     if len(coords) < min_samples:
-        return (barcode, None, "no-cluster")
+        return (barcode, None, "no-cluster", None)
     
     # DBSCAN聚类
     db = DBSCAN(
@@ -110,7 +110,7 @@ def process_single_cell(barcode, cell_data, eps=150, min_samples=6):
     
     # 无有效簇的情况
     if len(valid_labels) == 0:
-        return (barcode, None, "no-cluster")
+        return (barcode, None, "no-cluster", None)
     
     # 统计簇信息
     unique_labels, counts = np.unique(valid_labels, return_counts=True)
@@ -118,6 +118,7 @@ def process_single_cell(barcode, cell_data, eps=150, min_samples=6):
     main_mask = (labels == main_cluster)
     
     # 计算加权质心
+    clustered_cell_data = cell_data[main_mask]
     x_coords = cell_data['xcoord'].values[main_mask]
     y_coords = cell_data['ycoord'].values[main_mask]
     cluster_weights = cell_data['umi_count'].values[main_mask]
@@ -131,7 +132,7 @@ def process_single_cell(barcode, cell_data, eps=150, min_samples=6):
     else:
         cluster_type = "single-cluster"
     
-    return (barcode, (centroid_x, centroid_y), cluster_type)
+    return (barcode, (centroid_x, centroid_y), cluster_type, clustered_cell_data)
 
 def perform_dbscan_parallel(df, eps=150, min_samples=6, n_jobs=4, batch_size=100):
     """
@@ -170,6 +171,14 @@ def perform_dbscan_parallel(df, eps=150, min_samples=6, n_jobs=4, batch_size=100
         'cluster': [r[2] for r in results]
     }
     cb_cluster = pd.DataFrame(cluster_data)
+
+    clustered_cell_datas = [r[3] for r in results]
+    # 过滤掉可能为None的元素（如果有细胞没有聚类结果）
+    valid_clustered_dfs = [df for df in clustered_cell_datas if df is not None]
+
+    # 使用concat将所有数据框合并
+    combined_clustered_df = pd.concat(valid_clustered_dfs, ignore_index=True)
+
     
     all_cluster_types = ['single-cluster', 'multi-cluster', 'no-cluster']
     actual_counts = cb_cluster['cluster'].value_counts()
@@ -185,7 +194,7 @@ def perform_dbscan_parallel(df, eps=150, min_samples=6, n_jobs=4, batch_size=100
         4
     )
 
-    return coord_df, cb_cluster, cluster_stats
+    return coord_df, cb_cluster, cluster_stats, combined_clustered_df
 
 def generate_plots(df, cb_cluster, subsb_umi_summary, outdir):
     """Generate diagnostic plots"""
@@ -363,9 +372,10 @@ def dbscan_filter(infile, outdir, maxumi, minumi, matrixdir, cellreads, eps, min
     # Process data
     df = read_data(infile)
     filtered_df, subsb_umi_summary = filter_by_umi(df, maxumi, minumi)
-    coord_df, cb_cluster, cluster_stats = perform_dbscan_parallel(filtered_df, eps, min_samples, n_jobs)
+    coord_df, cb_cluster, cluster_stats, clustered_df = perform_dbscan_parallel(filtered_df, eps, min_samples, n_jobs)
     
     # Save intermediate results
+    clustered_df.to_csv(os.path.join(outdir, "dbscan_clustered_data.txt"), sep='\t', index=False)
     cluster_stats.to_csv(os.path.join(outdir, "dbscan_cluster_distribution.csv"), index=False)
     cb_cluster.to_csv(os.path.join(outdir, "CB_cluster.txt"), sep='\t', index=False)
     subsb_umi_summary.to_csv(os.path.join(outdir, "spatial_umi_knee_plot.temp.txt"), sep='\t', index=False)

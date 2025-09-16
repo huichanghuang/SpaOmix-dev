@@ -1,4 +1,4 @@
-threads: 16
+thread: 16
 rnachemistry: leader_v1
 oligochip: LD
 nobam: true
@@ -10,7 +10,7 @@ species: mouse
 mapparams: ""
 cbwhitelist: ""
 sbwhitelist: ""
-
+conda_env_path: /data03/lead/userdata/huanghuichang/Software/miniconda3
 
 # 输入文件配置
 references:

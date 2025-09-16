@@ -30,8 +30,8 @@ outdir = Path(config["outdir"])
 all_input = [
     expand(os.path.join(config["outdir"], "{sample}/.all_analysis.done"), sample=config["samples"]),
     expand(os.path.join(config["outdir"], "{sample}/.fastqc.done"), sample=config["samples"]),
-    expand(os.path.join(config["workdir"], "{sample}/.check_contamination.done"), sample=config["samples"]),
-    expand(os.path.join(config["workdir"], "{sample}/{sample}.cb_distance.png"), sample=config["samples"])
+    expand(os.path.join(config["outdir"], "{sample}/.check_contamination.done"), sample=config["samples"]),
+    expand(os.path.join(config["outdir"], "{sample}/{sample}.cb_distance.png"), sample=config["samples"])
 ]
 
 
