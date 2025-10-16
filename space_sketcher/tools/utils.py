@@ -135,8 +135,9 @@ def start_print_cmd(
     logger = logging.getLogger()
     logger.info(command)
     # 判断命令是否需要执行
-    if not os.path.exists(os.path.join(log_dir, f".{name}.done")) or not os.path.exists(os.path.join(log_dir, f".{name}.skipped")):
-        # 执行命令并实时输出
+    if os.path.exists(os.path.join(log_dir, f".{name}.done")) or os.path.exists(os.path.join(log_dir, f".{name}.skipped")):
+        logger.info(f".{name}.done or .{name}.skipped already exists, skip running {name}")    
+    else:    # 执行命令并实时输出
         try:
             subprocess.check_call(command, shell=True)
         except subprocess.CalledProcessError as e:
@@ -146,8 +147,6 @@ def start_print_cmd(
         except Exception as e:
             logger.error("[UNEXPECTED ERROR] %s", str(e))
             raise
-    else:
-        logger.info(f".{name}.done or .{name}.skipped already exists, skip running {name}")
 
 
 def judgeFilexits(*args):

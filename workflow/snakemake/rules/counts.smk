@@ -9,9 +9,7 @@ def get_references(species):
 
 
 def _set_count_params(wildcards):
-    """
-    
-    """
+
     space_sketcher = "/data03/lead/userdata/huanghuichang/Software/miniconda3/bin/space-sketcher"
     sample = wildcards.sample
     outdir = config["outdir"]
@@ -116,3 +114,44 @@ rule cb_distance:
         os.path.join(config["outdir"], "log/{sample}.cb_distance.log"),
     shell:
         "time {params.python} {params.pysrc} --infile {params.infile} --outfile {output} >{log} 2>&1\n"
+
+
+rule sunburst_plot:
+    input:
+        os.path.join(config["outdir"], "{sample}/.all_analysis.done"),
+    output:
+        os.path.join(config["outdir"], "{sample}/{sample}.sunburst_plot.html"),
+    params:
+        python = os.path.join(config["conda_env_path"], "bin/python"),
+        pysrc = os.path.join(SMK_PATH, "src/sunburst_plot.py"),
+        cellreads = os.path.join(config["outdir"], "{sample}/01.count/Solo.out/GeneFull_Ex50pAS/CellReads.stats"),
+        filtered_barcodes = os.path.join(config["outdir"], "{sample}/01.count/Solo.out/GeneFull_Ex50pAS/filtered/barcodes.tsv"),
+        clustered_barcodes = os.path.join(config["outdir"], "{sample}/02.oligo/filtered_matrix/barcodes.tsv.gz"),
+        summaryfile = os.path.join(config["outdir"], "{sample}/04.report/summary.csv"),
+        sb_umis = os.path.join(config["outdir"], "{sample}/02.oligo/spatial_umis.csv.gz"),
+        coord = lambda wildcards: config["samples"][wildcards.sample]["coord"],
+        oligochip = lambda wildcards: config["samples"][wildcards.sample].get("oligochip", config["oligochip"]),
+    threads: config["thread"],
+    log:
+        os.path.join(config["outdir"], "log/{sample}.sunburst_plot.log"),
+    shell:
+        "time {params.python} {params.pysrc} --cellreads {params.cellreads} --filtered_barcodes {params.filtered_barcodes} "
+        "--clustered_barcodes {params.clustered_barcodes} --summaryfile {params.summaryfile} --sb_umis {params.sb_umis} "
+        "--coordfile {params.coord} --oligochip {params.oligochip} --output {output} >{log} 2>&1\n"
+
+
+rule plot_chip_dot:
+    input:
+        os.path.join(config["outdir"], "{sample}/.all_analysis.done"),
+    output:
+        touch(os.path.join(config["outdir"], "{sample}/{sample}.plot_chip_dot.done")),
+    params:
+        python = os.path.join(config["conda_env_path"], "bin/python"),
+        pysrc = os.path.join(SMK_PATH, "src/plot_dot.py"),
+        indir = os.path.join(config["outdir"], "{sample}"),
+        oligochip = lambda wildcards: config["samples"][wildcards.sample].get("oligochip", config["oligochip"]),
+    threads: config["thread"],
+    log:
+        os.path.join(config["outdir"], "log/{sample}.plot_chip_dot.log"),
+    shell:
+        "time {params.python} {params.pysrc} {params.oligochip} {params.indir} >{log} 2>&1\n"

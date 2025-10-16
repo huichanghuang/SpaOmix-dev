@@ -348,7 +348,9 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
 
     ###jugde file exits
     summaryfile = os.path.join(indir, "04.report/summary.csv")
-    template_file = os.path.join(__root_dir__, "data/template/count_template.html")
+    # template_file = os.path.join(__root_dir__, "data/template/count_template.html")
+    template_file = os.path.join(__root_dir__, "data/template/count_template-v0.2.0.html")
+    print(template_file)
     kneefile1 = os.path.join(indir, "01.count/cell_rna_umi.rank.txt")
     kneefile2 = os.path.join(indir, "02.oligo/cell_sb_umi.rank.txt")
     sequencing_saturation_file = os.path.join(indir, "01.count/saturation.xls")
@@ -366,7 +368,8 @@ def generate_report(indir: Path|str, sample, kit, reference, oligochip, dev=True
     _summary = csv2dict(summaryfile)    
     template_dir = os.path.join(__root_dir__, "data/template")
     env = Environment(loader=FileSystemLoader(template_dir))
-    template = env.get_template("count_template.html")
+    # template = env.get_template("count_template.html")
+    template = env.get_template("count_template-v0.2.0.html")
 
     n_cells = _summary["Cells with Certain Location"]
     summary = format_summary(_summary)

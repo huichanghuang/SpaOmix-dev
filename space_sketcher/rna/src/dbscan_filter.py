@@ -177,8 +177,12 @@ def perform_dbscan_parallel(df, eps=150, min_samples=6, n_jobs=4, batch_size=100
     valid_clustered_dfs = [df for df in clustered_cell_datas if df is not None]
 
     # 使用concat将所有数据框合并
-    combined_clustered_df = pd.concat(valid_clustered_dfs, ignore_index=True)
-
+    # combined_clustered_df = pd.concat(valid_clustered_dfs, ignore_index=True)
+    if len(valid_clustered_dfs) == 0:
+        # 创建一个空的DataFrame，结构与预期的一致
+        combined_clustered_df = pd.DataFrame()
+    else:
+        combined_clustered_df = pd.concat(valid_clustered_dfs, ignore_index=True)
     
     all_cluster_types = ['single-cluster', 'multi-cluster', 'no-cluster']
     actual_counts = cb_cluster['cluster'].value_counts()
