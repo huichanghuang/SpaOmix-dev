@@ -149,9 +149,9 @@ rule plot_chip_dot:
         python = os.path.join(config["conda_env_path"], "bin/python"),
         pysrc = os.path.join(SMK_PATH, "src/plot_dot.py"),
         indir = os.path.join(config["outdir"], "{sample}"),
-        oligochip = lambda wildcards: config["samples"][wildcards.sample].get("oligochip", config["oligochip"]),
+        coord = lambda wildcards: config["samples"][wildcards.sample]["coord"],
     threads: config["thread"],
     log:
         os.path.join(config["outdir"], "log/{sample}.plot_chip_dot.log"),
     shell:
-        "time {params.python} {params.pysrc} {params.oligochip} {params.indir} >{log} 2>&1\n"
+        "time {params.python} {params.pysrc} {params.coord} {params.indir} >{log} 2>&1\n"

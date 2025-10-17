@@ -93,7 +93,7 @@ def change_path():
 # Construct bin path using os.path.join for better portability
 def bin_path():
     # return os.path.join(get_common_path_part(), '.venv/bin')  
-    return "/data03/lead/userdata/huanghuichang/Software/miniconda3/bin/"
+    return os.path.dirname(shutil.which("space-sketcher"))
     
 def rm_temp(*args):
     """

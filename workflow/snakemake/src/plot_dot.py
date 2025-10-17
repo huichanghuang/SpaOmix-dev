@@ -10,7 +10,7 @@ indir = os.path.abspath(sys.argv[2])
 
 samplename = os.path.basename(indir)
 cell_coord = os.path.join(indir, "02.oligo/cb_sb_coord.txt")
-fastq_coord = os.path.join(indir, "spatial_umis.csv.gz")
+fastq_coord = os.path.join(indir, "02.oligo/spatial_umis.csv.gz")
 
 inputdf = pd.read_csv(coordfile, header=None, names=["barcode", "xcoord", "ycoord"])
 xmax = max(inputdf["xcoord"])
@@ -39,7 +39,7 @@ plt.savefig(f"{indir}/{samplename}.spatial_spot_in_cell.png")
 
 rawsampledf = pd.read_csv(fastq_coord, header=0,compression="gzip")
 samplesbs = list(set(rawsampledf["Spatial_Barcode"]))
-rc_samplesbs = [Seq.reverse_complement(i) for i in samplesbs]
+rc_samplesbs = [Seq.reverse_complement(i) for i in samplesbs if isinstance(i, str)]
 sampledf = inputdf[inputdf["barcode"].isin(rc_samplesbs)]
 sampledf = sampledf.drop_duplicates()
 
